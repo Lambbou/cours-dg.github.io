@@ -2,7 +2,7 @@
 
 Site statique de ressources pédagogiques, compléments de cours et quiz d'auto-évaluation formative pour les étudiants de l'**ENSSAT** (Université de Rennes).
 
-🌐 **Accès en ligne :** [https://cours-dg.github.io/](https://cours-dg.github.io/)
+🌐 **Accès en ligne :** [https://lambbou.github.io/cours-dg.github.io/](https://lambbou.github.io/cours-dg.github.io/)
 
 ---
 
