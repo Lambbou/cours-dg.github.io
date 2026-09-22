@@ -768,13 +768,14 @@
           <svg viewBox="0 0 24 24">
             <path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/>
           </svg>
-          <input type="text" id="course-search" placeholder="Rechercher un thème, mot-clé (ex: POO, UML, états, DOO)..." aria-label="Recherche">
+          <input type="text" id="course-search" placeholder="Rechercher un thème, mot-clé (ex: POO, UML, Hygiène, Cybersécurité)..." aria-label="Recherche">
         </div>
         <div class="filter-tags">
           <button class="filter-btn active" data-filter="all">Tous les cours</button>
           <button class="filter-btn" data-filter="iai1">IAI 1</button>
           <button class="filter-btn" data-filter="poo">POO & UML</button>
-          <button class="filter-btn" data-filter="quiz">Quiz interactifs</button>
+          <button class="filter-btn" data-filter="cyber">Cybersécurité & Hygiène</button>
+          <button class="filter-btn" data-filter="quiz">Quiz & Sondages</button>
         </div>
       </div>
     </div>
@@ -845,6 +846,54 @@
 
         <div class="course-footer">
           <a href="doo/index.html" class="btn btn-outline" style="flex: 1; text-align: center;">
+            Voir le module complet →
+          </a>
+        </div>
+      </article>
+
+      <!-- CARTE DU COURS : HYGIÈNE DE L'INFORMATIQUE -->
+      <article class="course-card" data-tags="all iai1 cyber hygiene securite ssi sondage quiz">
+        <div class="course-header">
+          <div class="course-meta">
+            <span class="course-badge">Formation Ingénieur • ENSSAT</span>
+            <span class="status-badge active">
+              <span class="status-indicator"></span>
+              Sondage disponible
+            </span>
+          </div>
+          <h3 class="course-title">Hygiène de l'informatique & Cybersécurité</h3>
+          <span class="course-code">Module : /hygiene_info/</span>
+        </div>
+
+        <div class="course-body">
+          <p class="course-desc">
+            Sensibilisation aux bonnes pratiques de sécurité numérique, robustesse et gestion des mots de passe, démystification du protocole HTTPS et du chiffrement, protection des terminaux et cadre juridique SSI.
+          </p>
+
+          <div class="items-title">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm0 10.99h7c-.53 4.12-3.28 7.79-7 8.94V12H5V6.3l7-3.11v8.8z"/>
+            </svg>
+            Auto-évaluation & Positionnement
+          </div>
+
+          <ul class="quiz-items-list">
+            <li>
+              <a href="hygiene_info/sondage.html" class="quiz-item-link" title="Démarrer le Sondage Initial">
+                <span class="quiz-item-title">
+                  <svg viewBox="0 0 24 24">
+                    <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
+                  </svg>
+                  Sondage Initial : Réflexes & Pratiques Cyber
+                </span>
+                <span class="quiz-item-tag">12 questions</span>
+              </a>
+            </li>
+          </ul>
+        </div>
+
+        <div class="course-footer">
+          <a href="hygiene_info/index.html" class="btn btn-outline" style="flex: 1; text-align: center;">
             Voir le module complet →
           </a>
         </div>

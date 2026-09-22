@@ -29,6 +29,9 @@ cours-dg.github.io/
 │   ├── index.html              # Page d'atterrissage et synthèse du module DOO
 │   ├── doo-quiz-cm-1.html      # Quiz 1 : Fondements POO & Associations UML (12 questions)
 │   └── doo-quiz-cm-2.html      # Quiz 2 : Relations Avancées & Diagrammes d'États (12 questions)
+├── hygiene_info/               # 🛡️ Dossier du cours "Hygiène de l'informatique"
+│   ├── index.html              # Page d'atterrissage du module Hygiène & Cybersécurité
+│   └── sondage.html            # Sondage initial interactif avec débriefing pas-à-pas (12 questions)
 └── [nouveau-cours]/            # 📂 Emplacement pour futurs cours (ex: algo/, web/, etc.)
 ```
 

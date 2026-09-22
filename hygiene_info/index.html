@@ -1,0 +1,486 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Module : Hygiène de l'informatique — ENSSAT Lannion</title>
+  <meta name="description" content="Ressources, sondage d'auto-évaluation et compléments pédagogiques pour le cours d'Hygiène de l'informatique et Cybersécurité à l'ENSSAT.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary: #003366;
+      --primary-light: #0055a5;
+      --secondary: #0077b6;
+      --secondary-light: #e0f2fe;
+      --accent: #e65100;
+      --accent-light: #ff833a;
+      --dark: #1e293b;
+      --light-bg: #f8fafc;
+      --card-bg: #ffffff;
+      --success: #16a34a;
+      --success-light: #dcfce7;
+      --warning: #d97706;
+      --warning-light: #fef3c7;
+      --danger: #dc2626;
+      --danger-light: #fee2e2;
+      --border: #e2e8f0;
+      --text: #1e293b;
+      --text-muted: #64748b;
+      --radius: 16px;
+      --radius-sm: 8px;
+      --shadow: 0 10px 25px -5px rgba(0, 51, 102, 0.08), 0 8px 10px -6px rgba(0, 51, 102, 0.04);
+      --shadow-hover: 0 20px 30px -10px rgba(0, 51, 102, 0.15), 0 12px 14px -6px rgba(0, 51, 102, 0.08);
+      --transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Outfit', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: linear-gradient(135deg, #f1f5f9 0%, #e2eafc 100%);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      line-height: 1.6;
+    }
+
+    a {
+      color: inherit;
+      text-decoration: none;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 960px;
+      margin: 0 auto;
+      padding: 0 20px;
+    }
+
+    /* Top Navigation bar */
+    .top-nav {
+      padding: 20px 0;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .nav-back {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--primary);
+      font-weight: 600;
+      font-size: 0.95rem;
+      padding: 8px 16px;
+      border-radius: 999px;
+      background: white;
+      border: 1px solid var(--border);
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
+      transition: var(--transition);
+    }
+
+    .nav-back:hover {
+      background: var(--secondary-light);
+      border-color: var(--secondary);
+      transform: translateX(-3px);
+    }
+
+    .badge-enssat {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--primary);
+      color: white;
+      padding: 6px 14px;
+      border-radius: 999px;
+      font-size: 0.82rem;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+      box-shadow: 0 2px 8px rgba(0, 51, 102, 0.2);
+    }
+
+    .badge-enssat span {
+      color: var(--accent-light);
+    }
+
+    /* Course Header */
+    .course-header {
+      text-align: center;
+      margin-bottom: 40px;
+    }
+
+    .course-header h1 {
+      font-size: 2.3rem;
+      font-weight: 800;
+      color: var(--primary);
+      line-height: 1.25;
+      margin: 16px 0 10px;
+    }
+
+    .course-header p {
+      font-size: 1.05rem;
+      color: var(--text-muted);
+      max-width: 700px;
+      margin: 0 auto;
+    }
+
+    /* Section Title */
+    .section-title {
+      font-size: 1.4rem;
+      font-weight: 800;
+      color: var(--primary);
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    /* Resources List */
+    .resources-list {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 24px;
+      margin-bottom: 48px;
+    }
+
+    .resource-card {
+      background: var(--card-bg);
+      border-radius: var(--radius);
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow);
+      padding: 32px;
+      display: flex;
+      flex-direction: column;
+      transition: var(--transition);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .resource-card::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 6px;
+      height: 100%;
+      background: linear-gradient(180deg, var(--secondary) 0%, var(--accent) 100%);
+    }
+
+    .resource-card:hover {
+      transform: translateY(-4px);
+      box-shadow: var(--shadow-hover);
+      border-color: rgba(0, 119, 182, 0.4);
+    }
+
+    .card-meta-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 14px;
+    }
+
+    .card-badge {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.8rem;
+      font-weight: 700;
+      color: var(--secondary);
+      background: var(--secondary-light);
+      padding: 4px 10px;
+      border-radius: 6px;
+    }
+
+    .card-time {
+      font-size: 0.82rem;
+      color: var(--text-muted);
+      font-weight: 500;
+    }
+
+    .card-title {
+      font-size: 1.45rem;
+      font-weight: 700;
+      color: var(--primary);
+      margin-bottom: 12px;
+      line-height: 1.35;
+    }
+
+    .card-desc {
+      font-size: 0.98rem;
+      color: var(--text-muted);
+      margin-bottom: 22px;
+      line-height: 1.6;
+    }
+
+    .features-list {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 12px;
+      margin-bottom: 24px;
+    }
+
+    .feature-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.88rem;
+      color: var(--text);
+      background: #f8fafc;
+      padding: 8px 12px;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--border);
+    }
+
+    .feature-item svg {
+      width: 16px;
+      height: 16px;
+      fill: var(--secondary);
+      flex-shrink: 0;
+    }
+
+    .topics-tag-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-bottom: 24px;
+    }
+
+    .topic-tag {
+      font-size: 0.76rem;
+      font-weight: 600;
+      color: var(--primary);
+      background: #f1f5f9;
+      padding: 4px 10px;
+      border-radius: 6px;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 13px 26px;
+      border-radius: var(--radius-sm);
+      font-size: 0.98rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: var(--transition);
+      border: none;
+      text-decoration: none;
+    }
+
+    .btn-accent {
+      background: var(--accent);
+      color: white;
+      box-shadow: 0 4px 12px rgba(230, 81, 0, 0.25);
+    }
+
+    .btn-accent:hover {
+      background: var(--accent-light);
+      transform: translateY(-1px);
+      box-shadow: 0 6px 16px rgba(230, 81, 0, 0.35);
+    }
+
+    /* Course Overview / Syllabus Section */
+    .syllabus-card {
+      background: white;
+      border-radius: var(--radius);
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow);
+      padding: 32px;
+      margin-bottom: 48px;
+    }
+
+    .syllabus-card h3 {
+      font-size: 1.25rem;
+      color: var(--primary);
+      font-weight: 700;
+      margin-bottom: 20px;
+    }
+
+    .syllabus-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 20px;
+    }
+
+    .syllabus-block {
+      background: #f8fafc;
+      padding: 20px;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--border);
+    }
+
+    .syllabus-block h4 {
+      font-size: 1.05rem;
+      font-weight: 700;
+      color: var(--primary);
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .syllabus-block p {
+      font-size: 0.9rem;
+      color: var(--text-muted);
+      line-height: 1.5;
+    }
+
+    /* Footer */
+    footer.site-footer {
+      margin-top: auto;
+      background: #ffffff;
+      border-top: 1px solid var(--border);
+      padding: 28px 0;
+      color: var(--text-muted);
+      font-size: 0.88rem;
+      text-align: center;
+    }
+
+    @media (max-width: 600px) {
+      .course-header h1 {
+        font-size: 1.85rem;
+      }
+      .resource-card {
+        padding: 24px 20px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <!-- Barre de retour -->
+    <nav class="top-nav">
+      <a href="../index.html" class="nav-back">
+        ← Retour au portail
+      </a>
+      <div class="badge-enssat">ENSSAT <span>/</span> HYGIÈNE DE L'INFORMATIQUE</div>
+    </nav>
+
+    <!-- En-tête du cours -->
+    <header class="course-header">
+      <h1>Hygiène de l'informatique & Cybersécurité</h1>
+      <p>
+        Sensibilisation aux bonnes pratiques de sécurité numérique, réflexes de protection des comptes, décryptage des technologies du Web et compréhension du cadre juridique de la sécurité des systèmes d'information.
+      </p>
+    </header>
+
+    <!-- Liste des ressources disponibles -->
+    <main>
+      <h2 class="section-title">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm0 10.99h7c-.53 4.12-3.28 7.79-7 8.94V12H5V6.3l7-3.11v8.8z"/>
+        </svg>
+        Auto-évaluations & Positionnement
+      </h2>
+
+      <div class="resources-list">
+        <!-- Sondage Initial Card -->
+        <article class="resource-card">
+          <div class="card-meta-header">
+            <span class="card-badge">SONDAGE INITIAL</span>
+            <span class="card-time">~5 à 10 min • 12 questions</span>
+          </div>
+          <h3 class="card-title">Sondage Initial : Évaluation des Pratiques & Réflexes Cyber</h3>
+          <p class="card-desc">
+            Testez vos réflexes quotidiens et vos connaissances face aux risques numériques. Ce questionnaire interactif et 100% autonome vous propose un débriefing pédagogique immédiat à chaque question (démystification des pièges classiques comme le cadenas HTTPS, force réelle des mots de passe, mythes Linux/macOS) et établit votre <strong>profil de maturité cyber</strong> personnalisé en fin de parcours.
+          </p>
+
+          <div class="features-list">
+            <div class="feature-item">
+              <svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+              <span>Débriefing pédagogique pas-à-pas</span>
+            </div>
+            <div class="feature-item">
+              <svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+              <span>Calcul d'indice de maturité</span>
+            </div>
+            <div class="feature-item">
+              <svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+              <span>100% autonome & formateur</span>
+            </div>
+            <div class="feature-item">
+              <svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+              <span>Conseils concrets de sécurité</span>
+            </div>
+          </div>
+
+          <div class="topics-tag-list">
+            <span class="topic-tag">Mots de passe</span>
+            <span class="topic-tag">Entropie & Brute-force</span>
+            <span class="topic-tag">Cadenas HTTPS & TLS</span>
+            <span class="topic-tag">Chiffrement</span>
+            <span class="topic-tag">Données & Vie privée</span>
+            <span class="topic-tag">Smartphones & OS</span>
+            <span class="topic-tag">Cadre légal SSI</span>
+          </div>
+
+          <div>
+            <a href="sondage.html" class="btn btn-accent">
+              Démarrer le sondage interactif →
+            </a>
+          </div>
+        </article>
+      </div>
+
+      <!-- Thématiques clés du module -->
+      <section class="syllabus-card">
+        <h3>Programme & Thématiques clés du cours</h3>
+        <div class="syllabus-grid">
+          <div class="syllabus-block">
+            <h4>
+              🔑 Mots de passe & Authentification
+            </h4>
+            <p>
+              Entropie, longueur vs complexité artificielle, attaques par force brute, dictionnaires et rebond (<em>credential stuffing</em>), intérêt des gestionnaires de mots de passe et de l'authentification multifacteur (2FA/MFA).
+            </p>
+          </div>
+
+          <div class="syllabus-block">
+            <h4>
+              🌐 Web sécurisé, HTTPS & Chiffrement
+            </h4>
+            <p>
+              Fonctionnement du protocole TLS/HTTPS, rôle des certificats X.509, chiffrement symétrique et asymétrique, signature numérique et démystification du cadenas (confidentialité du canal $\neq$ authenticité ou moralité du site).
+            </p>
+          </div>
+
+          <div class="syllabus-block">
+            <h4>
+              📱 Sécurité des terminaux & Systèmes
+            </h4>
+            <p>
+              Smartphones comme concentrateurs de vie numérique, déconstruction du mythe de l'invulnérabilité de Linux et macOS, gestion des privilèges, pare-feu et mises à jour de sécurité régulières.
+            </p>
+          </div>
+
+          <div class="syllabus-block">
+            <h4>
+              ⚖️ Données personnelles & Cadre juridique
+            </h4>
+            <p>
+              Traces numériques, réfutation de l'argument « rien à cacher », pseudonymat vs obligation légale de conservation des logs par les FAI/hébergeurs (LCEN), loi Godfrain et responsabilités pénales en SSI.
+            </p>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <footer class="site-footer">
+    <div class="container">
+      Portail Pédagogique — ENSSAT Lannion • Cours d'Hygiène de l'informatique
+    </div>
+  </footer>
+
+</body>
+</html>
