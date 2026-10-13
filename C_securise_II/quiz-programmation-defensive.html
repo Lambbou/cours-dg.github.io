@@ -1,0 +1,965 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Quiz 1 : Programmation Défensive & Écueils Mémoire — C Sécurisé II</title>
+  <meta name="description"
+    content="Quiz interactif de 10 questions sur la programmation défensive en C, les pièges des pointeurs, les fuites mémoires et la robustesse logicielle. CUPGE2 Cyber — ENSSAT.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap"
+    rel="stylesheet">
+  <style>
+    :root {
+      --primary: #003366;
+      --primary-light: #0055a5;
+      --secondary: #0077b6;
+      --secondary-light: #e0f2fe;
+      --accent: #e65100;
+      --accent-light: #ff833a;
+      --dark: #1e293b;
+      --light-bg: #f8fafc;
+      --card-bg: #ffffff;
+      --success: #16a34a;
+      --success-light: #dcfce7;
+      --warning: #d97706;
+      --warning-light: #fef3c7;
+      --danger: #dc2626;
+      --danger-light: #fee2e2;
+      --info: #0284c7;
+      --info-light: #e0f2fe;
+      --border: #e2e8f0;
+      --text: #1e293b;
+      --text-muted: #64748b;
+      --radius: 16px;
+      --radius-sm: 8px;
+      --shadow: 0 10px 25px -5px rgba(0, 51, 102, 0.08), 0 8px 10px -6px rgba(0, 51, 102, 0.04);
+      --shadow-hover: 0 20px 30px -10px rgba(0, 51, 102, 0.15), 0 12px 14px -6px rgba(0, 51, 102, 0.08);
+      --transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Outfit', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: linear-gradient(135deg, #f0f4f8 0%, #e2eafc 100%);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 24px 16px;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 840px;
+      margin: auto;
+    }
+
+    /* Top Navigation bar */
+    .nav-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 24px;
+      font-size: 0.9rem;
+    }
+
+    .nav-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-weight: 600;
+      color: var(--primary);
+      text-decoration: none;
+      background: white;
+      padding: 8px 16px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.04);
+      transition: var(--transition);
+    }
+
+    .nav-btn:hover {
+      background: var(--secondary-light);
+      border-color: var(--secondary);
+      transform: translateX(-2px);
+    }
+
+    .module-link {
+      font-weight: 600;
+      color: var(--secondary);
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 14px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.7);
+      border: 1px solid transparent;
+      transition: var(--transition);
+    }
+
+    .module-link:hover {
+      background: white;
+      border-color: var(--border);
+      color: var(--primary);
+    }
+
+    /* Header */
+    .header {
+      text-align: center;
+      margin-bottom: 24px;
+    }
+
+    .badge-enssat {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--primary);
+      color: white;
+      padding: 6px 14px;
+      border-radius: 999px;
+      font-size: 0.82rem;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+      margin-bottom: 12px;
+      box-shadow: 0 2px 8px rgba(0, 51, 102, 0.2);
+    }
+
+    .badge-enssat span {
+      color: var(--accent-light);
+    }
+
+    .header h1 {
+      font-size: 1.8rem;
+      font-weight: 800;
+      color: var(--primary);
+      line-height: 1.25;
+      margin-bottom: 8px;
+    }
+
+    .header p {
+      color: var(--text-muted);
+      font-size: 0.98rem;
+      max-width: 680px;
+      margin: 0 auto;
+    }
+
+    .purpose-alert {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      background: #eff6ff;
+      border: 1px solid #bfdbfe;
+      color: #1e40af;
+      padding: 12px 18px;
+      border-radius: var(--radius-sm);
+      margin: 16px auto 0;
+      font-size: 0.88rem;
+      line-height: 1.45;
+      text-align: left;
+    }
+
+    .purpose-alert svg {
+      width: 22px;
+      height: 22px;
+      flex-shrink: 0;
+      fill: #2563eb;
+    }
+
+    /* Card */
+    .card {
+      background: var(--card-bg);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      border: 1px solid var(--border);
+      padding: 32px 28px;
+      transition: all 0.3s ease;
+    }
+
+    /* Progress bar */
+    .progress-container {
+      margin-bottom: 24px;
+    }
+
+    .progress-meta {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.88rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      margin-bottom: 8px;
+    }
+
+    .progress-meta .current-score {
+      color: var(--secondary);
+      font-weight: 700;
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    .progress-bar-bg {
+      height: 8px;
+      background: var(--border);
+      border-radius: 999px;
+      overflow: hidden;
+    }
+
+    .progress-bar-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--secondary) 0%, var(--accent) 100%);
+      border-radius: 999px;
+      transition: width 0.4s ease;
+    }
+
+    /* Question content */
+    .question-title {
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: var(--primary);
+      margin-bottom: 10px;
+      line-height: 1.35;
+    }
+
+    .question-text {
+      font-size: 1.05rem;
+      color: var(--text);
+      line-height: 1.55;
+      margin-bottom: 20px;
+    }
+
+    /* Code block inside question or choices */
+    .code-block {
+      background: #1e293b;
+      color: #f8fafc;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.9rem;
+      padding: 14px 16px;
+      border-radius: 10px;
+      margin: 12px 0 20px;
+      overflow-x: auto;
+      line-height: 1.5;
+      border: 1px solid #334155;
+    }
+
+    .code-block code {
+      font-family: inherit;
+    }
+
+    .inline-code {
+      font-family: 'JetBrains Mono', monospace;
+      background: #f1f5f9;
+      color: #0f172a;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-size: 0.88em;
+      border: 1px solid #e2e8f0;
+    }
+
+    /* Choices */
+    .choices-list {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      margin-bottom: 28px;
+    }
+
+    .choice-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 14px;
+      padding: 14px 18px;
+      border: 2px solid var(--border);
+      border-radius: 12px;
+      background: white;
+      cursor: pointer;
+      transition: var(--transition);
+      user-select: none;
+    }
+
+    .choice-item:hover:not(.locked) {
+      border-color: var(--secondary);
+      background: #f8fafc;
+      transform: translateY(-2px);
+    }
+
+    .choice-item.selected {
+      border-color: var(--secondary);
+      background: var(--secondary-light);
+    }
+
+    .choice-letter {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: #e2e8f0;
+      color: var(--text);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 0.85rem;
+      flex-shrink: 0;
+      transition: var(--transition);
+      margin-top: 2px;
+    }
+
+    .choice-item.selected .choice-letter {
+      background: var(--secondary);
+      color: white;
+    }
+
+    .choice-text {
+      font-size: 0.98rem;
+      line-height: 1.45;
+      color: var(--text);
+      flex: 1;
+    }
+
+    /* Locked state after validation */
+    .choice-item.locked {
+      cursor: default;
+    }
+
+    .choice-item.correct {
+      border-color: var(--success) !important;
+      background: var(--success-light) !important;
+    }
+
+    .choice-item.correct .choice-letter {
+      background: var(--success) !important;
+      color: white !important;
+    }
+
+    .choice-item.incorrect {
+      border-color: var(--danger) !important;
+      background: var(--danger-light) !important;
+    }
+
+    .choice-item.incorrect .choice-letter {
+      background: var(--danger) !important;
+      color: white !important;
+    }
+
+    /* Feedback box */
+    .feedback-box {
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 24px;
+      animation: fadeIn 0.3s ease-out;
+    }
+
+    .feedback-box.correct {
+      background: var(--success-light);
+      border: 1px solid #bbf7d0;
+      color: #14532d;
+    }
+
+    .feedback-box.incorrect {
+      background: var(--danger-light);
+      border: 1px solid #fecaca;
+      color: #7f1d1d;
+    }
+
+    .feedback-header {
+      font-size: 1.05rem;
+      font-weight: 700;
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .feedback-text {
+      font-size: 0.95rem;
+      line-height: 1.55;
+    }
+
+    /* Actions */
+    .actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 12px;
+    }
+
+    .btn {
+      font-family: inherit;
+      font-size: 1rem;
+      font-weight: 600;
+      padding: 12px 24px;
+      border-radius: 999px;
+      border: none;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      transition: var(--transition);
+      text-decoration: none;
+    }
+
+    .btn-primary {
+      background: var(--primary);
+      color: white;
+    }
+
+    .btn-primary:hover:not(:disabled) {
+      background: var(--primary-light);
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0, 51, 102, 0.25);
+    }
+
+    .btn-primary:disabled {
+      background: #cbd5e1;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .btn-accent {
+      background: var(--accent);
+      color: white;
+    }
+
+    .btn-accent:hover {
+      background: var(--accent-light);
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(230, 81, 0, 0.25);
+    }
+
+    /* Results Card */
+    .results-card {
+      text-align: center;
+      padding: 16px 0;
+      animation: fadeIn 0.4s ease-out;
+    }
+
+    .score-circle {
+      width: 140px;
+      height: 140px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+      color: white;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 24px;
+      box-shadow: 0 10px 25px rgba(0, 51, 102, 0.25);
+    }
+
+    .score-value {
+      font-size: 3rem;
+      font-weight: 800;
+      line-height: 1;
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    .score-total {
+      font-size: 0.95rem;
+      opacity: 0.9;
+      font-weight: 500;
+    }
+
+    .result-badge {
+      display: inline-block;
+      padding: 6px 18px;
+      border-radius: 999px;
+      font-size: 0.95rem;
+      font-weight: 700;
+      margin-bottom: 16px;
+    }
+
+    .badge-excellent {
+      background: var(--success-light);
+      color: var(--success);
+      border: 1px solid #bbf7d0;
+    }
+
+    .badge-good {
+      background: var(--secondary-light);
+      color: #075985;
+      border: 1px solid #bae6fd;
+    }
+
+    .badge-review {
+      background: #fef3c7;
+      color: #92400e;
+      border: 1px solid #fde68a;
+    }
+
+    .result-message {
+      color: var(--text);
+      font-size: 1.05rem;
+      line-height: 1.6;
+      max-width: 600px;
+      margin: 0 auto 28px;
+    }
+
+    .review-list {
+      text-align: left;
+      margin-top: 36px;
+      border-top: 1px solid var(--border);
+      padding-top: 28px;
+    }
+
+    .review-item {
+      padding: 18px;
+      border-radius: 12px;
+      background: #f8fafc;
+      border: 1px solid var(--border);
+      margin-bottom: 14px;
+      transition: var(--transition);
+    }
+
+    .review-item-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-weight: 700;
+      margin-bottom: 8px;
+      font-size: 0.95rem;
+    }
+
+    .review-item.pass {
+      border-left: 4px solid var(--success);
+    }
+
+    .review-item.pass .review-item-header {
+      color: var(--success);
+    }
+
+    .review-item.fail {
+      border-left: 4px solid var(--danger);
+    }
+
+    .review-item.fail .review-item-header {
+      color: var(--danger);
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(8px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @media (max-width: 600px) {
+      .card {
+        padding: 22px 18px;
+      }
+
+      .header h1 {
+        font-size: 1.45rem;
+      }
+
+      .question-title {
+        font-size: 1.1rem;
+      }
+
+      .btn {
+        width: 100%;
+        justify-content: center;
+      }
+
+      .actions {
+        flex-direction: column;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="container">
+    <!-- Top Navigation -->
+    <div class="nav-bar">
+      <a href="../index.html" class="nav-btn">
+        ← Retour au portail
+      </a>
+      <a href="index.html" class="module-link">
+        Module C Sécurisé II
+      </a>
+    </div>
+
+    <!-- En-tête -->
+    <div class="header">
+      <div class="badge-enssat">ENSSAT <span>/</span> CUPGE2 CYBER <span>•</span> C SÉCURISÉ II</div>
+      <h1>Quiz 1 : Programmation Défensive & Écueils Mémoire</h1>
+      <p>Sensibilisation initiale (Slide 5) & Validation finale des acquis (Slide 59) en 10 questions notionnelles et
+        pratiques</p>
+
+      <div class="purpose-alert">
+        <svg viewBox="0 0 24 24">
+          <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z" />
+        </svg>
+        <div>
+          <strong>Objectif pédagogique double :</strong> Faites ce quiz <em>au début du cours</em> pour tester vos
+          connaissances préalables. Refaites-le <em>en fin de module</em> pour viser le <strong>10/10</strong> !
+        </div>
+      </div>
+    </div>
+
+    <!-- Carte interactive principale -->
+    <div class="card" id="quiz-card">
+      <!-- Barre de progression -->
+      <div class="progress-container">
+        <div class="progress-meta">
+          <span id="progress-text">Question 1 sur 10</span>
+          <span class="current-score" id="score-counter">Score actuel : 0 / 0</span>
+        </div>
+        <div class="progress-bar-bg">
+          <div class="progress-bar-fill" id="progress-fill" style="width: 10%;"></div>
+        </div>
+      </div>
+
+      <!-- Zone de Question -->
+      <div id="question-container">
+        <div class="question-title" id="q-title">Chargement de la question...</div>
+        <div class="question-text" id="q-text"></div>
+        <div id="q-code-container"></div>
+
+        <div class="choices-list" id="choices-list">
+          <!-- Injecté par JavaScript -->
+        </div>
+
+        <div id="feedback-container"></div>
+      </div>
+
+      <!-- Barre d'actions -->
+      <div class="actions">
+        <button class="btn btn-primary" id="btn-validate" disabled>Valider ma réponse</button>
+        <button class="btn btn-accent" id="btn-next" style="display: none;">Question suivante →</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const questions = [
+      {
+        title: "1. Philosophie fondamentale de la programmation défensive",
+        text: "Quel est le principe directeur au cœur de la programmation défensive en C, tel qu'illustré dès l'introduction du cours ?",
+        code: null,
+        choices: [
+          { text: "Partir du principe que le compilateur et le système d'exploitation corrigeront automatiquement les erreurs à l'exécution.", correct: false },
+          { text: "Ne jamais faire aveuglément confiance aux données externes, aux appelants, aux outils ou à soi-même, et anticiper activement toute anomalie.", correct: true },
+          { text: "Remplacer tous les pointeurs par des variables globales statiques pour éviter d'avoir à gérer la mémoire dynamique.", correct: false },
+          { text: "Masquer silencieusement toutes les erreurs survenues à l'exécution afin d'éviter d'alerter l'utilisateur final.", correct: false }
+        ],
+        feedback: "La programmation défensive part du principe que tout ce qui vient de l'extérieur (utilisateur, fichier, réseau, autre module, code d'un collègue ou suggestion d'un LLM) est potentiellement imprévisible, erroné ou malveillant. Elle vise à ce que le code échoue de manière sûre (fail-safe) et prévisible sans jamais corrompre son état interne."
+      },
+      {
+        title: "2. Nature et impact d'une fuite mémoire (Memory Leak)",
+        text: "Pourquoi les fuites mémoires sont-elles particulièrement pernicieuses dans les logiciels développés en C ?",
+        code: null,
+        choices: [
+          { text: "Elles font planter le programme instantanément dès le premier appel à malloc().", correct: false },
+          { text: "Elles sont souvent silencieuses au départ mais s'accumulent au fil du temps jusqu'à dégrader les performances ou provoquer l'arrêt brutal du processus par l'OS.", correct: true },
+          { text: "Elles modifient aléatoirement les constantes définies dans le code source du binaire.", correct: false },
+          { text: "Elles ne concernent que la mémoire de la pile (Stack) et disparaissent automatiquement au retour de chaque fonction.", correct: false }
+        ],
+        feedback: "Une fuite mémoire survient lorsqu'une mémoire allouée sur le tas (Heap) n'est plus accessible (perte du pointeur) sans avoir été libérée via free(). La consommation mémoire augmente progressivement et silencieusement jusqu'à saturer la RAM, dégrader les performances globales et déclencher l'OOM Killer du système d'exploitation."
+      },
+      {
+        title: "3. Pointeur suspendu (Dangling Pointer) et Use-After-Free",
+        text: "Considérez le fragment de code suivant. Que devient le pointeur p immédiatement après l'appel à free(p), et quelle est la bonne pratique défensive indispensable ?",
+        code: "int *p = malloc(sizeof(int));\n*p = 42;\nfree(p); // La mémoire du Heap est libérée...",
+        choices: [
+          { text: "p est automatiquement réinitialisé à NULL par le compilateur C standard.", correct: false },
+          { text: "p devient un pointeur suspendu (dangling pointer) conservant l'ancienne adresse ; il faut immédiatement lui assigner p = NULL;.", correct: true },
+          { text: "p est immédiatement détruit de la pile d'exécution et toute tentative d'écriture déclenche une erreur de compilation.", correct: false },
+          { text: "La mémoire pointée par p reste légalement réservée et accessible jusqu'à la sortie de la fonction.", correct: false }
+        ],
+        feedback: "free(p) informe le gestionnaire de mémoire que le bloc sur le tas est rendu, mais la variable p (qui réside sur la pile) conserve son ancienne valeur d'adresse ! Tenter d'y accéder donne lieu à une grave vulnérabilité Use-After-Free (UAF). La règle d'or défensive est d'écrire systématiquement : free(p); p = NULL;."
+      },
+      {
+        title: "4. Le piège critique du Double Free",
+        text: "Pourquoi tenter de libérer deux fois le même bloc mémoire sans réallocation intermédiaire (double free) est-il considéré comme une vulnérabilité critique ?",
+        code: "int *p = malloc(sizeof(int));\nfree(p);\nfree(p); // ❌ Deuxième libération consécutive",
+        choices: [
+          { text: "Le second free() est simplement ignoré par le système sans aucun impact.", correct: false },
+          { text: "Cela libère involontairement les variables locales situées sur la pile d'exécution.", correct: false },
+          { text: "Cela corrompt les structures de métadonnées internes de l'allocateur de mémoire (tas), ouvrant la voie à des attaques par détournement d'exécution.", correct: true },
+          { text: "Le compilateur refuse catégoriquement de compiler tout binaire contenant deux fois le mot free().", correct: false }
+        ],
+        feedback: "Le Double Free corrompt les métadonnées de l'allocateur (listes de blocs libres dans la glibc), ce qui peut provoquer un crash immédiat ou permettre à un pirate d'écrire des adresses arbitraires en mémoire. Assigner p = NULL après la libération évite ce risque car en C standard, free(NULL) est garanti inoffensif et sans opération."
+      },
+      {
+        title: "5. Erreurs de segmentation et portée des variables locales",
+        text: "Pourquoi le code suivant provoque-t-il un comportement indéfini critique et un risque de plantage (Segfault) chez l'appelant ?",
+        code: "int* get_secret_number(void) {\n    int secret = 42;\n    return &secret; // ❌ Retour d'adresse\n}",
+        choices: [
+          { text: "La variable locale secret est allouée sur la pile (stack) ; son cadre mémoire est invalidé et recyclé dès que la fonction se termine.", correct: true },
+          { text: "Le type de retour d'une fonction C doit obligatoirement être void* pour pouvoir renvoyer une adresse.", correct: false },
+          { text: "La constante 42 est un mot-clé réservé du préprocesseur qui ne peut pas être déréférencé.", correct: false },
+          { text: "Une adresse de pile ne peut jamais être stockée dans une variable de type pointeur.", correct: false }
+        ],
+        feedback: "Les variables locales automatiques vivent sur la pile (Stack). Quand la fonction se termine, sa pile d'activation est détruite. L'adresse retournée pointe donc vers une zone mémoire fantôme qui sera écrasée au prochain appel de fonction, créant un pointeur suspendu sur la pile particulièrement dangereux."
+      },
+      {
+        title: "6. Dépassement de tampon (Buffer Overflow) et fonctions d'E/S",
+        text: "Pourquoi la fonction gets() a-t-elle été définitivement bannie de la norme C11, et par quelle alternative sûre doit-elle être systématiquement remplacée ?",
+        code: "char buffer[32];\n// Pourquoi 'gets(buffer)' est-elle proscrite ? Quelle est l'alternative ?",
+        choices: [
+          { text: "Elle est trop lente ; elle doit être remplacée par scanf(\"%s\", buffer).", correct: false },
+          { text: "Elle ne contrôle jamais la taille du buffer récepteur et lit indéfiniment, causant des buffer overflows ; on utilise fgets(buffer, sizeof(buffer), stdin).", correct: true },
+          { text: "Elle convertit automatiquement toutes les minuscules en majuscules non désirées.", correct: false },
+          { text: "Elle ne fonctionne que sur les terminaux Linux et n'est pas portable sous Windows.", correct: false }
+        ],
+        feedback: "gets() lit l'entrée jusqu'au saut de ligne sans jamais vérifier si le tableau de destination est assez grand, provoquant des dépassements de tampon (Stack Smashing). L'alternative robuste en programmation défensive est fgets(buffer, sizeof(buffer), stdin), qui contraint rigoureusement la lecture à la taille du buffer."
+      },
+      {
+        title: "7. Sécurité des entiers et calcul de taille mémoire",
+        text: "Avant d'allouer de la mémoire dynamique proportionnelle à un nombre count d'éléments, pourquoi une vérification défensive contre l'Integer Overflow est-elle capitale ?",
+        code: "void process(size_t count) {\n    // Pourquoi ne JAMAIS faire directement : \n    // int* tab = malloc(count * sizeof(int));\n}",
+        choices: [
+          { text: "Parce que malloc() refuse systématiquement d'allouer plus de 1024 octets en un seul appel.", correct: false },
+          { text: "Si count est très grand, la multiplication count * sizeof(int) peut déborder (wrap around) et allouer un tout petit buffer, menant à un dépassement de tas catastrophique.", correct: true },
+          { text: "Parce que l'opérateur sizeof() n'est pas évaluable dans une expression arithmétique.", correct: false },
+          { text: "Pour vérifier que count est un entier impair, condition imposée par les bus d'adresses 64 bits.", correct: false }
+        ],
+        feedback: "Si count est très grand, count * sizeof(int) dépasse la capacité maximale de size_t (SIZE_MAX) et boucle vers une petite valeur positive. malloc() alloue alors avec succès ce minuscule bloc, mais la suite du programme tentera d'y écrire count entiers, déclenchant un Heap Buffer Overflow exploitable."
+      },
+      {
+        title: "8. Assertions de développement vs Gestion d'erreurs d'exécution",
+        text: "Quelle est la règle d'or concernant l'utilisation des assertions (assert.h) par rapport à la gestion d'erreurs en production ?",
+        code: null,
+        choices: [
+          { text: "Les assertions doivent être utilisées pour valider les saisies utilisateurs et les ouvertures de fichiers.", correct: false },
+          { text: "Les assertions vérifient des invariants internes et préconditions de code en développement (désactivables via NDEBUG) ; elles ne doivent jamais remplacer le traitement explicite des erreurs d'exécution normales.", correct: true },
+          { text: "Les assertions ne s'activent qu'en mode production et sont désactivées lors des sessions de débogage.", correct: false },
+          { text: "Il n'y a aucune différence : assert() est simplement une abréviation de perror() suivie de return.", correct: false }
+        ],
+        feedback: "Une assertion documente et valide ce qui DOIT TOUJOURS être vrai selon la conception logique du programmeur. En production, la compilation avec le flag -DNDEBUG désactive purement et simplement tous les asserts ! Par conséquent, valider une saisie utilisateur ou un échec d'allocation mémoire avec assert() est une faute majeure : ces situations doivent toujours être traitées par un code conditionnel if explicit."
+      },
+      {
+        title: "9. Outils d'instrumentation : Valgrind et AddressSanitizer",
+        text: "Quel est l'apport spécifique de Valgrind (Memcheck) et de l'option de compilation AddressSanitizer (-fsanitize=address) pour la détection des failles ?",
+        code: null,
+        choices: [
+          { text: "Ils réécrivent automatiquement le code C en langage Rust pour supprimer tous les pointeurs.", correct: false },
+          { text: "Ce sont des outils d'analyse dynamique indispensables pour détecter à l'exécution les fuites mémoire, les lectures hors bornes et les accès Use-After-Free.", correct: true },
+          { text: "Ce sont des protocoles cryptographiques garantissant la non-répudiation des commits Git.", correct: false },
+          { text: "Ils permettent d'ignorer les avertissements du compilateur comme -Wall et -Wextra.", correct: false }
+        ],
+        feedback: "Valgrind émule le CPU pour inspecter chaque accès mémoire et signaler les allocations non libérées ou les écritures hors limites. AddressSanitizer (ASan), intégré directement dans GCC et Clang via -fsanitize=address, instrumente le binaire pour intercepter immédiatement et avec une grande précision tout dépassement de buffer ou use-after-free."
+      },
+      {
+        title: "10. Prudence défensive avec l'aide des LLM (IA générative)",
+        text: "Selon les principes présentés en cours et les recommandations de l'OWASP Top 10 for LLMs, quelle posture le développeur défensif doit-il impérativement adopter face au code produit par une IA ?",
+        code: null,
+        choices: [
+          { text: "Accorder une confiance absolue au code généré par un LLM car les modèles d'IA ne génèrent jamais de failles de pointeurs.", correct: false },
+          { text: "Valider et relire systématiquement chaque suggestion, ne jamais transmettre de code sensible ou propriétaire, et garder à l'esprit les risques de sur-confiance.", correct: true },
+          { text: "Désactiver les warnings du compilateur (-Wall, -Wextra) dès lors que le code a été proposé par un modèle spécialisé.", correct: false },
+          { text: "Remplacer l'ensemble des tests unitaires et des sanitizers par une revue conversationnelle avec le chatbot.", correct: false }
+        ],
+        feedback: "Comme le soulignent les risques LLM02 et LLM09 de l'OWASP (sur-confiance et fuite de données confidentielles), le code produit par un LLM peut paraître élégant tout en dissimulant des failles subtiles de gestion de mémoire ou de débordement d'entier. Le développeur reste l'unique garant de la sécurité et doit tester et auditer chaque brique."
+      }
+    ];
+
+    let currentIndex = 0;
+    let score = 0;
+    let selectedChoiceIndex = null;
+    let userAnswers = [];
+
+    const letters = ['A', 'B', 'C', 'D'];
+
+    function loadQuestion(index) {
+      const q = questions[index];
+      selectedChoiceIndex = null;
+
+      // Progress bar & counters
+      document.getElementById('progress-text').textContent = `Question ${index + 1} sur ${questions.length}`;
+      document.getElementById('progress-fill').style.width = `${((index + 1) / questions.length) * 100}%`;
+      document.getElementById('score-counter').textContent = `Score actuel : ${score} / ${index}`;
+
+      document.getElementById('q-title').textContent = q.title;
+      document.getElementById('q-text').textContent = q.text;
+
+      // Code snippet
+      const codeContainer = document.getElementById('q-code-container');
+      if (q.code) {
+        codeContainer.innerHTML = `<pre class="code-block"><code>${escapeHtml(q.code)}</code></pre>`;
+      } else {
+        codeContainer.innerHTML = '';
+      }
+
+      // Clear feedback
+      document.getElementById('feedback-container').innerHTML = '';
+
+      // Choices
+      const list = document.getElementById('choices-list');
+      list.innerHTML = '';
+
+      q.choices.forEach((c, i) => {
+        const item = document.createElement('div');
+        item.className = 'choice-item';
+        item.tabIndex = 0;
+        item.setAttribute('role', 'button');
+        item.setAttribute('aria-label', `Option ${letters[i]}: ${c.text}`);
+        item.innerHTML = `
+          <div class="choice-letter">${letters[i]}</div>
+          <div class="choice-text">${c.text}</div>
+        `;
+        const selectChoice = () => {
+          if (item.classList.contains('locked')) return;
+          document.querySelectorAll('.choice-item').forEach(el => el.classList.remove('selected'));
+          item.classList.add('selected');
+          selectedChoiceIndex = i;
+          document.getElementById('btn-validate').disabled = false;
+        };
+        item.addEventListener('click', selectChoice);
+        item.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            selectChoice();
+          }
+        });
+        list.appendChild(item);
+      });
+
+      document.getElementById('btn-validate').style.display = 'inline-flex';
+      document.getElementById('btn-validate').disabled = true;
+      document.getElementById('btn-next').style.display = 'none';
+    }
+
+    function escapeHtml(text) {
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+
+    function validateAnswer() {
+      if (selectedChoiceIndex === null) return;
+
+      const q = questions[currentIndex];
+      const items = document.querySelectorAll('.choice-item');
+      const isCorrect = q.choices[selectedChoiceIndex].correct;
+
+      if (isCorrect) score++;
+
+      userAnswers.push({
+        qIndex: currentIndex,
+        chosen: selectedChoiceIndex,
+        correct: isCorrect
+      });
+
+      // Style choices
+      items.forEach((item, i) => {
+        item.classList.add('locked');
+        if (q.choices[i].correct) {
+          item.classList.add('correct');
+        } else if (i === selectedChoiceIndex && !isCorrect) {
+          item.classList.add('incorrect');
+        }
+      });
+
+      // Show feedback
+      const feedbackBox = document.createElement('div');
+      feedbackBox.className = `feedback-box ${isCorrect ? 'correct' : 'incorrect'}`;
+      feedbackBox.innerHTML = `
+        <div class="feedback-header">
+          ${isCorrect ? '✓ Exact ! Excellente analyse défensive.' : '✗ Oups ! Attention au piège.'}
+        </div>
+        <div class="feedback-text">
+          <strong>Éclairage notionnel & bonnes pratiques :</strong> ${q.feedback}
+        </div>
+      `;
+      document.getElementById('feedback-container').appendChild(feedbackBox);
+
+      // Buttons
+      document.getElementById('btn-validate').style.display = 'none';
+      const btnNext = document.getElementById('btn-next');
+      btnNext.style.display = 'inline-flex';
+      btnNext.textContent = (currentIndex < questions.length - 1) ? 'Question suivante →' : 'Consulter mon bilan global →';
+      document.getElementById('score-counter').textContent = `Score : ${score} / ${currentIndex + 1}`;
+    }
+
+    function showResults() {
+      const pct = Math.round((score / questions.length) * 100);
+      let badgeClass = 'badge-good';
+      let badgeText = 'Bonne maîtrise d\'ensemble';
+      let message = 'Vous maîtrisez la majorité des concepts de programmation défensive. Quelques écueils méritent toutefois d\'être consolidés.';
+
+      if (pct === 100) {
+        badgeClass = 'badge-excellent';
+        badgeText = '🏆 Score Parfait : 10 / 10 !';
+        message = 'Félicitations remarquables ! Vos réflexes en programmation défensive et gestion de mémoire sont exemplaires.';
+      } else if (pct >= 80) {
+        badgeClass = 'badge-excellent';
+        badgeText = 'Excellente maîtrise défensive';
+        message = 'Très bon niveau ! Vous avez acquis les principaux réflexes de sécurité et de robustesse en C.';
+      } else if (pct < 60) {
+        badgeClass = 'badge-review';
+        badgeText = '⚠️ Révisions recommandées';
+        message = 'Ce quiz révèle des points de vulnérabilité (dangling pointers, gestion d\'erreurs, buffer overflows). C\'est normal en début de cours : revoyez attentivement le support pour viser le 10/10 en fin de module !';
+      }
+
+      let reviewHtml = '';
+      userAnswers.forEach((ans, i) => {
+        const q = questions[ans.qIndex];
+        reviewHtml += `
+          <div class="review-item ${ans.correct ? 'pass' : 'fail'}">
+            <div class="review-item-header">
+              <span>Question ${i + 1} : ${ans.correct ? '✓ Validée' : '✗ Erreur sur la question'}</span>
+              <span>${ans.correct ? '+1 pt' : '0 pt'}</span>
+            </div>
+            <p style="font-weight: 700; margin-bottom: 6px; color: var(--text);">${q.title}</p>
+            <p style="font-size: 0.92rem; color: var(--text-muted); line-height: 1.5;">${q.feedback}</p>
+          </div>
+        `;
+      });
+
+      const card = document.getElementById('quiz-card');
+      card.innerHTML = `
+        <div class="results-card">
+          <div class="score-circle">
+            <div class="score-value">${score}</div>
+            <div class="score-total">sur ${questions.length}</div>
+          </div>
+          <div class="result-badge ${badgeClass}">${badgeText} (${pct}%)</div>
+          <p class="result-message">${message}</p>
+          
+          <div style="display: flex; gap: 12px; justify-content: center; flex-wrap: wrap;">
+            <button class="btn btn-primary" onclick="location.reload()">Recommencer le quiz</button>
+            <a href="quiz-pointeurs-bases.html" class="btn btn-accent">Faire le Quiz 2 (Pointeurs & Arithmétique) →</a>
+          </div>
+
+          <div class="review-list">
+            <h3 style="color: var(--primary); margin-bottom: 16px; font-size: 1.2rem;">📋 Récapitulatif pédagogique de vos réponses :</h3>
+            ${reviewHtml}
+          </div>
+        </div>
+      `;
+    }
+
+    document.getElementById('btn-validate').addEventListener('click', validateAnswer);
+    document.getElementById('btn-next').addEventListener('click', () => {
+      currentIndex++;
+      if (currentIndex < questions.length) {
+        loadQuestion(currentIndex);
+      } else {
+        showResults();
+      }
+    });
+
+    // Initialisation
+    loadQuestion(0);
+  </script>
+</body>
+
+</html>

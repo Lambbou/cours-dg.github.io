@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Allocation Dynamique en C</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+            line-height: 1.6;
+            color: #333;
+            background-color: #f9f9f9;
+            margin: 0;
+            padding: 20px;
+        }
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background-color: #fff;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        h1, h2 {
+            color: #005a9c;
+            border-bottom: 2px solid #e0e0e0;
+            padding-bottom: 10px;
+        }
+        h1 {
+            text-align: center;
+        }
+        code {
+            background-color: #eef;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: "Courier New", Courier, monospace;
+            font-size: 0.95em;
+        }
+        pre {
+            background-color: #2d2d2d;
+            color: #f8f8f2;
+            padding: 15px;
+            border-radius: 5px;
+            overflow-x: auto;
+        }
+        pre code {
+            background-color: transparent;
+            padding: 0;
+        }
+        .memory-diagram {
+            display: flex;
+            justify-content: space-around;
+            align-items: flex-start;
+            margin: 30px 0;
+            padding: 20px;
+            background-color: #f7f7f7;
+            border: 1px dashed #ccc;
+            border-radius: 8px;
+        }
+        .memory-area {
+            text-align: center;
+        }
+        .memory-area h3 {
+            margin-top: 0;
+            color: #555;
+        }
+        .stack, .heap {
+            border: 2px solid #666;
+            padding: 10px;
+            min-width: 150px;
+        }
+        .stack {
+            background-color: #e0f0ff;
+        }
+        .heap {
+            background-color: #fff0e0;
+        }
+        .pointer {
+            background-color: #fff;
+            border: 1px solid #999;
+            padding: 5px;
+            margin: 5px;
+        }
+        .pointer-name {
+            font-weight: bold;
+            font-family: "Courier New", Courier, monospace;
+        }
+        .address {
+            font-style: italic;
+            color: #d9534f;
+            font-size: 0.9em;
+        }
+        .arrow {
+            font-size: 2.5em;
+            color: #d9534f;
+            align-self: center;
+            margin: 0 20px;
+            position: relative;
+            top: 20px;
+        }
+        .array-vis {
+            display: flex;
+            border: 1px solid #333;
+        }
+        .array-cell {
+            width: 60px;
+            height: 60px;
+            border-left: 1px solid #ccc;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+        }
+        .array-cell:first-child {
+            border-left: none;
+        }
+        .cell-index {
+            position: absolute;
+            top: 2px;
+            left: 5px;
+            font-size: 0.7em;
+            color: #666;
+        }
+        .cell-value {
+            font-size: 1.2em;
+            font-weight: bold;
+        }
+        .highlight {
+            background-color: #ffd700 !important;
+            transition: background-color 0.3s ease;
+        }
+        .freed {
+            background-color: #ddd !important;
+            text-decoration: line-through;
+            color: #888;
+        }
+        .null-pointer {
+            text-decoration: line-through;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>Allocation Dynamique et Accès Mémoire en C 🧠</h1>
+        <p>Cette page décompose le fonctionnement de l'allocation de mémoire dynamique, son accès via l'arithmétique des pointeurs, et sa libération. Nous utiliserons l'extrait de code C suivant comme exemple :</p>
+        <pre><code class="language-c">const int array_size = 5;
+int *array;
+array = (int *) malloc( array_size * sizeof(int) );
+
+for (int i = 0; i < array_size; ++i) {
+    *(array + i) = i * i;
+}
+
+free(array);
+array = NULL;
+</code></pre>
+
+        <hr>
+
+        <h2>Étape 1 : L'Allocation avec <code>malloc</code></h2>
+        <p>La première étape consiste à demander de la mémoire au système d'exploitation.</p>
+        <pre><code>array = (int *) malloc( array_size * sizeof(int) );</code></pre>
+        <ul>
+            <li><code>malloc</code> (<em>memory allocation</em>) réserve un bloc de mémoire sur une zone appelée le <strong>tas (heap)</strong>.</li>
+            <li><code>array_size * sizeof(int)</code> calcule la taille totale nécessaire : 5 fois la taille d'un entier (par exemple, 5 * 4 = 20 octets).</li>
+            <li><code>malloc</code> retourne l'adresse du début de ce bloc.</li>
+            <li>Cette adresse est stockée dans notre pointeur <code>array</code>, qui lui, se trouve sur la <strong>pile (stack)</strong>.</li>
+        </ul>
+
+        <h4>Visualisation de la mémoire :</h4>
+        <div class="memory-diagram">
+            <div class="memory-area">
+                <h3>Pile (Stack)</h3>
+                <div class="stack">
+                    <div class="pointer">
+                        <span class="pointer-name">array</span><br>
+                        <span class="address">@0x7ffc...</span>
+                        <hr>
+                        Contient l'adresse : <b class="address">@0x55a...</b>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="arrow">&rarr;</div>
+
+            <div class="memory-area">
+                <h3>Tas (Heap)</h3>
+                <div class="heap">
+                    <div class="array-vis">
+                        <div class="array-cell"><div class="cell-index">@0x55a...</div><div class="cell-value">?</div></div>
+                        <div class="array-cell"><div class="cell-index">...</div><div class="cell-value">?</div></div>
+                        <div class="array-cell"><div class="cell-index">...</div><div class="cell-value">?</div></div>
+                        <div class="array-cell"><div class="cell-index">...</div><div class="cell-value">?</div></div>
+                        <div class="array-cell"><div class="cell-index">...</div><div class="cell-value">?</div></div>
+                    </div>
+                    <small>Un bloc de 20 octets (pour 5 entiers) est réservé. Les valeurs sont indéterminées.</small>
+                </div>
+            </div>
+        </div>
+
+        <hr>
+
+        <h2>Étape 2 : Accès et Initialisation avec la Boucle <code>for</code></h2>
+        <p>Maintenant, nous allons remplir ce bloc mémoire en utilisant une boucle et l'<strong>arithmétique des pointeurs</strong>.</p>
+        <pre><code>*(array + i) = i * i;</code></pre>
+        <p>Décortiquons cette ligne cruciale :</p>
+        <ul>
+            <li><code>array + i</code>: C'est le cœur de l'arithmétique des pointeurs. Cela ne signifie pas "adresse de base + i octets". Le compilateur sait que <code>array</code> est un pointeur vers des <code>int</code>. Donc, <code>array + i</code> signifie : "aller à l'adresse de base et avancer de <code>i</code> cases de la taille d'un <code>int</code>".</li>
+            <li><code>*( ... )</code>: L'opérateur de <strong>déréférencement</strong>. Il signifie : "accéder à la valeur qui se trouve à l'adresse calculée entre les parenthèses".</li>
+        </ul>
+        
+        <h4>Visualisation de la boucle (itération par itération) :</h4>
+        
+        <p><b>Quand i = 0:</b> <code>*(array + 0)</code> pointe vers le premier élément. On y écrit <code>0 * 0</code>.</p>
+        <div class="array-vis">
+            <div class="array-cell highlight"><div class="cell-value">0</div></div>
+            <div class="array-cell"><div class="cell-value">?</div></div>
+            <div class="array-cell"><div class="cell-value">?</div></div>
+            <div class="array-cell"><div class="cell-value">?</div></div>
+            <div class="array-cell"><div class="cell-value">?</div></div>
+        </div>
+
+        <p><b>Quand i = 1:</b> <code>*(array + 1)</code> pointe vers le deuxième élément. On y écrit <code>1 * 1</code>.</p>
+        <div class="array-vis">
+            <div class="array-cell"><div class="cell-value">0</div></div>
+            <div class="array-cell highlight"><div class="cell-value">1</div></div>
+            <div class="array-cell"><div class="cell-value">?</div></div>
+            <div class="array-cell"><div class="cell-value">?</div></div>
+            <div class="array-cell"><div class="cell-value">?</div></div>
+        </div>
+
+        <p><b>Quand i = 2:</b> <code>*(array + 2)</code> pointe vers le troisième élément. On y écrit <code>2 * 2</code>.</p>
+        <div class="array-vis">
+            <div class="array-cell"><div class="cell-value">0</div></div>
+            <div class="array-cell"><div class="cell-value">1</div></div>
+            <div class="array-cell highlight"><div class="cell-value">4</div></div>
+            <div class="array-cell"><div class="cell-value">?</div></div>
+            <div class="array-cell"><div class="cell-value">?</div></div>
+        </div>
+        
+        <p>...et ainsi de suite jusqu'à la fin de la boucle.</p>
+        <p><b>État final après la boucle :</b></p>
+        <div class="array-vis">
+            <div class="array-cell"><div class="cell-value">0</div></div>
+            <div class="array-cell"><div class="cell-value">1</div></div>
+            <div class="array-cell"><div class="cell-value">4</div></div>
+            <div class="array-cell"><div class="cell-value">9</div></div>
+            <div class="array-cell"><div class="cell-value">16</div></div>
+        </div>
+
+        <hr>
+
+        <h2>Étape 3 : Libération de la Mémoire avec <code>free</code></h2>
+        <p>La mémoire allouée sur le tas ne se nettoie pas toute seule ! Nous devons la rendre explicitement au système.</p>
+        <pre><code>free(array);</code></pre>
+        <ul>
+            <li><code>free()</code> prend en argument un pointeur qui a été retourné par <code>malloc</code>.</li>
+            <li>Elle informe le système que le bloc de mémoire pointé par <code>array</code> est maintenant disponible et peut être réutilisé.</li>
+            <li><strong>Attention :</strong> Après <code>free(array)</code>, le pointeur <code>array</code> lui-même contient toujours l'ancienne adresse ! C'est ce qu'on appelle un <strong>pointeur suspendu (dangling pointer)</strong>. Tenter de l'utiliser est une grave erreur qui peut faire planter le programme.</li>
+        </ul>
+
+        <h4>Visualisation après <code>free(array)</code> :</h4>
+        <div class="memory-diagram">
+            <div class="memory-area">
+                <h3>Pile (Stack)</h3>
+                <div class="stack">
+                    <div class="pointer">
+                        <span class="pointer-name">array</span><br>
+                        <span class="address">@0x7ffc...</span>
+                        <hr>
+                        Contient toujours : <b class="address">@0x55a...</b> (DANGER !)
+                    </div>
+                </div>
+            </div>
+            
+            <div class="arrow null-pointer">&rarr;</div>
+
+            <div class="memory-area">
+                <h3>Tas (Heap)</h3>
+                <div class="heap freed">
+                    <div class="array-vis">
+                        <div class="array-cell"><div class="cell-value"></div></div>
+                        <div class="array-cell"><div class="cell-value"></div></div>
+                        <div class="array-cell"><div class="cell-value"></div></div>
+                        <div class="array-cell"><div class="cell-value"></div></div>
+                        <div class="array-cell"><div class="cell-value"></div></div>
+                    </div>
+                    <small>Ce bloc est maintenant marqué comme "disponible" par le système.</small>
+                </div>
+            </div>
+        </div>
+
+        <hr>
+
+        <h2>Étape 4 : La Bonne Pratique : <code>array = NULL;</code></h2>
+        <p>Pour éviter les problèmes liés aux pointeurs suspendus, il est recommandé de mettre le pointeur à <code>NULL</code> juste après avoir libéré la mémoire.</p>
+        <pre><code>array = NULL;</code></pre>
+        <ul>
+            <li><code>NULL</code> est une valeur spéciale (souvent 0) qui signifie "ce pointeur ne pointe sur rien de valide".</li>
+            <li>Cela permet de vérifier plus tard si le pointeur est utilisable (ex: <code>if (array != NULL)</code>) et empêche son utilisation accidentelle.</li>
+        </ul>
+
+        <h4>Visualisation finale :</h4>
+        <div class="memory-diagram">
+            <div class="memory-area">
+                <h3>Pile (Stack)</h3>
+                <div class="stack">
+                    <div class="pointer">
+                        <span class="pointer-name">array</span><br>
+                        <span class="address">@0x7ffc...</span>
+                        <hr>
+                        Contient : <b>NULL</b>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+</body>
+</html>
