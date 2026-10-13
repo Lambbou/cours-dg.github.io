@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Infographie: La Pile vs. Le Tas en C</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap');
+
+        body {
+            font-family: 'Roboto', sans-serif;
+            background-color: #f0f4f8;
+            color: #333;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+        }
+
+        .infographic-container {
+            max-width: 900px;
+            width: 100%;
+            background-color: #fff;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+
+        header {
+            background-color: #4a5568;
+            color: #fff;
+            padding: 25px;
+            text-align: center;
+        }
+
+        header h1 {
+            margin: 0;
+            font-size: 2.2em;
+        }
+        
+        header p {
+            margin: 5px 0 0;
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        .content-wrapper {
+            display: flex;
+            flex-wrap: wrap; /* Pour la responsivité sur mobile */
+        }
+
+        .memory-section {
+            flex: 1;
+            padding: 30px;
+            min-width: 300px; /* Largeur minimum pour éviter que ce soit trop écrasé */
+        }
+
+        .memory-section h2 {
+            font-size: 2em;
+            margin-top: 0;
+            display: flex;
+            align-items: center;
+        }
+        
+        .memory-section .icon {
+            font-size: 2.5em;
+            margin-right: 15px;
+        }
+
+        /* Spécificités de la PILE */
+        #stack {
+            background-color: #e2e8f0;
+            border-right: 1px solid #cbd5e0; /* Séparateur pour la vue desktop */
+        }
+
+        #stack h2 {
+            color: #2c5282;
+        }
+
+        /* Spécificités du TAS */
+        #heap {
+            background-color: #f7fafc;
+        }
+
+        #heap h2 {
+            color: #c53030;
+        }
+        
+        ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        li {
+            background-color: #fff;
+            border-left: 5px solid;
+            padding: 15px;
+            margin-bottom: 12px;
+            border-radius: 5px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            transition: transform 0.2s;
+        }
+        
+        li:hover {
+            transform: scale(1.03);
+        }
+        
+        #stack li { border-color: #4299e1; }
+        #heap li { border-color: #f56565; }
+
+        li strong {
+            display: block;
+            margin-bottom: 5px;
+            font-size: 1.1em;
+        }
+        
+        code {
+            background-color: #2d3748;
+            color: #f7fafc;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: 'Courier New', Courier, monospace;
+        }
+
+        .warning {
+            background-color: #fed7d7;
+            border-left-color: #c53030;
+            color: #c53030;
+        }
+        
+        /* Media query pour les petits écrans */
+        @media (max-width: 768px) {
+            .content-wrapper {
+                flex-direction: column;
+            }
+            #stack {
+                border-right: none;
+                border-bottom: 1px solid #cbd5e0;
+            }
+        }
+
+    </style>
+</head>
+<body>
+
+    <div class="infographic-container">
+        <header>
+            <h1>Mémoire en C : La Pile vs. Le Tas</h1>
+            <p>Comprendre les deux zones de mémoire principales pour vos données.</p>
+        </header>
+        
+        <div class="content-wrapper">
+            <div id="stack" class="memory-section">
+                <h2><span class="icon">📚</span>La Pile (Stack)</h2>
+                <ul>
+                    <li>
+                        <strong>Gestion Automatique</strong>
+                        Le compilateur gère l'allocation et la libération pour vous. Pas de stress !
+                    </li>
+                    <li>
+                        <strong>Type LIFO</strong>
+                        Dernier entré, premier sorti. Comme une pile d'assiettes : on reprend celle du dessus en premier.
+                    </li>
+                    <li>
+                        <strong>Contenu Principal</strong>
+                        Stocke les variables locales des fonctions et les informations d'appel.
+                    </li>
+                     <li>
+                        <strong>Très Rapide</strong>
+                        L'accès à la mémoire est extrêmement rapide car il s'agit simplement de déplacer un pointeur.
+                    </li>
+                </ul>
+            </div>
+            
+            <div id="heap" class="memory-section">
+                <h2><span class="icon">📦</span>Le Tas (Heap)</h2>
+                <ul>
+                    <li>
+                        <strong>Gestion Manuelle</strong>
+                        Vous êtes le maître ! Vous devez allouer et libérer la mémoire vous-même.
+                    </li>
+                    <li>
+                        <strong>Fonctions Clés</strong>
+                        Utilisation de <code>malloc()</code>, <code>calloc()</code> pour réserver et <code>free()</code> pour libérer la mémoire.
+                    </li>
+                    <li>
+                        <strong>Taille Flexible</strong>
+                        Une grande zone de mémoire, parfaite pour les données dont la taille est inconnue à la compilation.
+                    </li>
+                    <li class="warning">
+                        <strong>Attention aux Fuites !</strong>
+                        Oublier de libérer la mémoire (avec <code>free()</code>) crée des fuites, ce qui peut causer de gros problèmes.
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+</body>
+</html>

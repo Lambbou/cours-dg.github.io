@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Arithmétique des Pointeurs en C</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+            line-height: 1.6;
+            color: #333;
+            background-color: #f9f9f9;
+            margin: 0;
+            padding: 20px;
+        }
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background-color: #fff;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        h1, h2 {
+            color: #005a9c;
+            border-bottom: 2px solid #e0e0e0;
+            padding-bottom: 10px;
+        }
+        h1 {
+            text-align: center;
+        }
+        code {
+            background-color: #eef;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: "Courier New", Courier, monospace;
+            font-size: 0.95em;
+        }
+        pre {
+            background-color: #2d2d2d;
+            color: #f8f8f2;
+            padding: 15px;
+            border-radius: 5px;
+            overflow-x: auto;
+        }
+        pre code {
+            background-color: transparent;
+            padding: 0;
+        }
+        .info-box {
+            padding: 15px;
+            margin-bottom: 15px;
+            border-radius: 5px;
+            border: 1px solid #ffc107; 
+            background-color: #fffde6;
+        }
+        .info-box h3 {
+            margin-top: 0;
+            color: #b38600;
+        }
+        .memory-diagram {
+            display: flex;
+            justify-content: space-around;
+            align-items: flex-start;
+            margin: 30px 0;
+            padding: 20px;
+            background-color: #f7f7f7;
+            border: 1px dashed #ccc;
+            border-radius: 8px;
+        }
+        .memory-area {
+            text-align: center;
+        }
+        .memory-area h3 {
+            margin-top: 0;
+            color: #555;
+        }
+        .stack, .heap {
+            border: 2px solid #666;
+            padding: 10px;
+            min-width: 150px;
+        }
+        .stack {
+            background-color: #e0f0ff;
+        }
+        .heap {
+            background-color: #fff0e0;
+        }
+        .pointer {
+            background-color: #fff;
+            border: 1px solid #999;
+            padding: 5px;
+            margin: 5px;
+        }
+        .pointer-name {
+            font-weight: bold;
+            font-family: "Courier New", Courier, monospace;
+        }
+        .address {
+            font-style: italic;
+            color: #d9534f;
+            font-size: 0.9em;
+        }
+        .arrow {
+            font-size: 2.5em;
+            color: #d9534f;
+            align-self: center;
+            margin: 0 20px;
+            position: relative;
+            top: 20px;
+        }
+        .array-vis {
+            display: flex;
+            border: 1px solid #333;
+        }
+        .array-cell {
+            width: 70px;
+            height: 70px;
+            border-left: 1px solid #ccc;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+            background-color: #fff;
+        }
+        .array-cell:first-child {
+            border-left: none;
+        }
+        .cell-index {
+            position: absolute;
+            top: 2px;
+            left: 5px;
+            font-size: 0.7em;
+            color: #666;
+        }
+        .cell-address {
+            position: absolute;
+            bottom: 2px;
+            font-size: 0.7em;
+            color: #d9534f;
+        }
+        .cell-value {
+            font-size: 1.2em;
+            font-weight: bold;
+        }
+        .highlight {
+            background-color: #ffd700 !important;
+            border: 2px solid #b38600;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>L'Arithmétique des Pointeurs en C 📐</h1>
+        <p>L'arithmétique des pointeurs est une des fonctionnalités les plus puissantes et distinctives du C. Elle permet de naviguer dans la mémoire de manière efficace, mais elle est très différente de l'arithmétique sur les entiers.</p>
+        
+        <hr>
+
+        <h2>Le Principe Fondamental</h2>
+
+        <div class="info-box">
+            <h3>Une arithmétique basée sur le type</h3>
+            <p>
+                Quand vous ajoutez 1 à un pointeur, vous ne lui ajoutez pas 1 octet. Vous le déplacez pour qu'il pointe sur **l'élément suivant** du même type.
+            </p>
+            <p>La magie est que le compilateur connaît la taille du type pointé (<code>sizeof(type)</code>) et s'occupe du calcul :</p>
+            <ul>
+                <li><code>ptr + 1</code> pour un <code>int*</code> avance de <code>1 * sizeof(int)</code> octets (souvent 4).</li>
+                <li><code>ptr + 1</code> pour un <code>char*</code> avance de <code>1 * sizeof(char)</code> octet (toujours 1).</li>
+                <li><code>ptr + i</code> avance de <code>i * sizeof(type)</code> octets.</li>
+            </ul>
+        </div>
+
+        <pre><code class="language-c">int numbers[] = {10, 20, 30, 40};
+int *ptr = numbers; // ptr pointe sur le premier élément (10)
+
+// Déplaçons le pointeur
+ptr = ptr + 2; // ptr pointe maintenant sur le troisième élément (30)
+</code></pre>
+
+        <hr>
+        
+        <h2>Visualisation de l'Arithmétique</h2>
+        <p>Considérons un pointeur <code>ptr</code> qui pointe vers un tableau d'entiers sur le tas. Chaque entier occupe 4 octets.</p>
+        
+        <div class="memory-diagram">
+            <div class="memory-area">
+                <h3>Pile (Stack)</h3>
+                <div class="stack">
+                    <div class="pointer">
+                        <span class="pointer-name">ptr</span><br>
+                        <span class="address">@0x7ffc...</span>
+                        <hr>
+                        Contient l'adresse : <b class="address">@0x1000</b>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="arrow">&rarr;</div>
+
+            <div class="memory-area">
+                <h3>Tas (Heap)</h3>
+                <div class="heap">
+                    <div class="array-vis">
+                        <div class="array-cell"><div class="cell-index">[0]</div><div class="cell-value">10</div><div class="cell-address">@0x1000</div></div>
+                        <div class="array-cell"><div class="cell-index">[1]</div><div class="cell-value">20</div><div class="cell-address">@0x1004</div></div>
+                        <div class="array-cell highlight"><div class="cell-index">[2]</div><div class="cell-value">30</div><div class="cell-address">@0x1008</div></div>
+                        <div class="array-cell"><div class="cell-index">[3]</div><div class="cell-value">40</div><div class="cell-address">@0x100C</div></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <p>L'expression <code>ptr + 2</code> ne calcule pas <code>0x1000 + 2</code>. Elle calcule :</p>
+        <p style="text-align:center; font-family: 'Courier New', monospace; font-size: 1.2em;">
+            Adresse de base + (Index * sizeof(int))<br>
+            <code>0x1000 + (2 * 4) = 0x1008</code>
+        </p>
+        <p>Le résultat est l'adresse de l'élément à l'index 2, qui est bien <code>30</code>. La case est surlignée dans le diagramme ci-dessus.</p>
+
+        <hr>
+
+        <h2>Lien avec les Tableaux : Juste du Sucre Syntaxique !</h2>
+        <p>En C, l'accès à un élément de tableau avec les crochets <code>[]</code> est directement lié à l'arithmétique des pointeurs. C'est pourquoi on dit que c'est du "sucre syntaxique".</p>
+        
+        <p>Les deux expressions suivantes sont **strictement équivalentes** pour le compilateur :</p>
+        <pre><code>valeur = array[i];
+valeur = *(array + i);</code></pre>
+        
+        <ul>
+            <li><code>array[i]</code> : "Prends le i-ème élément du tableau." (Facile à lire)</li>
+            <li><code>*(array + i)</code> : "Calcule l'adresse du i-ème élément en partant de 'array', puis déréférence ce pointeur pour obtenir la valeur." (Ce qui se passe réellement)</li>
+        </ul>
+
+        <hr>
+
+        <h2>Opérations Courantes</h2>
+
+        <p>Voici les opérations arithmétiques valides sur les pointeurs :</p>
+        <pre><code class="language-c">int numbers[] = {10, 20, 30, 40, 50};
+int *p1 = &numbers[1]; // p1 pointe sur 20
+int *p2 = &numbers[4]; // p2 pointe sur 50
+
+// 1. Addition d'un entier à un pointeur
+int *p3 = p1 + 3; // p3 pointe maintenant sur 50. (1 + 3 = index 4)
+printf("%d\n", *p3); // Affiche 50
+
+// 2. Soustraction d'un entier à un pointeur
+p3 = p2 - 2; // p3 pointe maintenant sur 30. (4 - 2 = index 2)
+printf("%d\n", *p3); // Affiche 30
+
+// 3. Soustraction de deux pointeurs (du même tableau !)
+// Le résultat est le nombre d'éléments qui les séparent.
+int diff = p2 - p1; // diff = 4 - 1 = 3
+printf("Il y a %d éléments entre p1 et p2\n", diff);
+
+// 4. Incrémentation et Décrémentation
+p1++; // p1 pointe maintenant sur 30 (index 2)
+printf("%d\n", *p1);
+
+p2--; // p2 pointe maintenant sur 40 (index 3)
+printf("%d\n", *p2);
+</code></pre>
+        <div class="info-box" style="border-color: #dc3545; background-color: #ffe6e6;">
+            <h3 style="color: #a71d2a;">⚠️ Pièges et dangers</h3>
+            <p>L'arithmétique des pointeurs n'est valide qu'à l'intérieur d'un seul bloc de mémoire alloué (comme un tableau). Tenter d'accéder à une mémoire en dehors de ce bloc (dépassement de tampon ou *buffer overflow*) conduit à un **comportement indéfini** (Undefined Behavior), la source de nombreux bugs et failles de sécurité.</p>
+        </div>
+
+    </div>
+
+</body>
+</html>

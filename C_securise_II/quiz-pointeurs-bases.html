@@ -1,0 +1,946 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Quiz 2 : Fondements des Pointeurs & Arithmétique — C Sécurisé II</title>
+  <meta name="description" content="Quiz interactif de 10 questions sur les fondamentaux des pointeurs en C, les opérateurs d'adresse et déréférencement, les structures et l'arithmétique de pointeurs. CUPGE2 Cyber — ENSSAT.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary: #003366;
+      --primary-light: #0055a5;
+      --secondary: #0077b6;
+      --secondary-light: #e0f2fe;
+      --accent: #e65100;
+      --accent-light: #ff833a;
+      --dark: #1e293b;
+      --light-bg: #f8fafc;
+      --card-bg: #ffffff;
+      --success: #16a34a;
+      --success-light: #dcfce7;
+      --warning: #d97706;
+      --warning-light: #fef3c7;
+      --danger: #dc2626;
+      --danger-light: #fee2e2;
+      --info: #0284c7;
+      --info-light: #e0f2fe;
+      --border: #e2e8f0;
+      --text: #1e293b;
+      --text-muted: #64748b;
+      --radius: 16px;
+      --radius-sm: 8px;
+      --shadow: 0 10px 25px -5px rgba(0, 51, 102, 0.08), 0 8px 10px -6px rgba(0, 51, 102, 0.04);
+      --shadow-hover: 0 20px 30px -10px rgba(0, 51, 102, 0.15), 0 12px 14px -6px rgba(0, 51, 102, 0.08);
+      --transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Outfit', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: linear-gradient(135deg, #f0f4f8 0%, #e2eafc 100%);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 24px 16px;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 840px;
+      margin: auto;
+    }
+
+    /* Top Navigation bar */
+    .nav-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 24px;
+      font-size: 0.9rem;
+    }
+
+    .nav-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-weight: 600;
+      color: var(--primary);
+      text-decoration: none;
+      background: white;
+      padding: 8px 16px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      box-shadow: 0 2px 5px rgba(0,0,0,0.04);
+      transition: var(--transition);
+    }
+
+    .nav-btn:hover {
+      background: var(--secondary-light);
+      border-color: var(--secondary);
+      transform: translateX(-2px);
+    }
+
+    .module-link {
+      font-weight: 600;
+      color: var(--secondary);
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 14px;
+      border-radius: 999px;
+      background: rgba(255,255,255,0.7);
+      border: 1px solid transparent;
+      transition: var(--transition);
+    }
+
+    .module-link:hover {
+      background: white;
+      border-color: var(--border);
+      color: var(--primary);
+    }
+
+    /* Header */
+    .header {
+      text-align: center;
+      margin-bottom: 24px;
+    }
+
+    .badge-enssat {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--primary);
+      color: white;
+      padding: 6px 14px;
+      border-radius: 999px;
+      font-size: 0.82rem;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+      margin-bottom: 12px;
+      box-shadow: 0 2px 8px rgba(0, 51, 102, 0.2);
+    }
+
+    .badge-enssat span {
+      color: var(--accent-light);
+    }
+
+    .header h1 {
+      font-size: 1.8rem;
+      font-weight: 800;
+      color: var(--primary);
+      line-height: 1.25;
+      margin-bottom: 8px;
+    }
+
+    .header p {
+      color: var(--text-muted);
+      font-size: 0.98rem;
+      max-width: 680px;
+      margin: 0 auto;
+    }
+
+    .purpose-alert {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      background: #eff6ff;
+      border: 1px solid #bfdbfe;
+      color: #1e40af;
+      padding: 12px 18px;
+      border-radius: var(--radius-sm);
+      margin: 16px auto 0;
+      font-size: 0.88rem;
+      line-height: 1.45;
+      text-align: left;
+    }
+
+    .purpose-alert svg {
+      width: 22px;
+      height: 22px;
+      flex-shrink: 0;
+      fill: #2563eb;
+    }
+
+    /* Card */
+    .card {
+      background: var(--card-bg);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      border: 1px solid var(--border);
+      padding: 32px 28px;
+      transition: all 0.3s ease;
+    }
+
+    /* Progress bar */
+    .progress-container {
+      margin-bottom: 24px;
+    }
+
+    .progress-meta {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.88rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      margin-bottom: 8px;
+    }
+
+    .progress-meta .current-score {
+      color: var(--secondary);
+      font-weight: 700;
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    .progress-bar-bg {
+      height: 8px;
+      background: var(--border);
+      border-radius: 999px;
+      overflow: hidden;
+    }
+
+    .progress-bar-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--secondary) 0%, var(--accent) 100%);
+      border-radius: 999px;
+      transition: width 0.4s ease;
+    }
+
+    /* Question content */
+    .question-title {
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: var(--primary);
+      margin-bottom: 10px;
+      line-height: 1.35;
+    }
+
+    .question-text {
+      font-size: 1.05rem;
+      color: var(--text);
+      line-height: 1.55;
+      margin-bottom: 20px;
+    }
+
+    /* Code block */
+    .code-block {
+      background: #1e293b;
+      color: #f8fafc;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.9rem;
+      padding: 14px 16px;
+      border-radius: 10px;
+      margin: 12px 0 20px;
+      overflow-x: auto;
+      line-height: 1.5;
+      border: 1px solid #334155;
+    }
+
+    .code-block code {
+      font-family: inherit;
+    }
+
+    .inline-code {
+      font-family: 'JetBrains Mono', monospace;
+      background: #f1f5f9;
+      color: #0f172a;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-size: 0.88em;
+      border: 1px solid #e2e8f0;
+    }
+
+    /* Choices */
+    .choices-list {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      margin-bottom: 28px;
+    }
+
+    .choice-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 14px;
+      padding: 14px 18px;
+      border: 2px solid var(--border);
+      border-radius: 12px;
+      background: white;
+      cursor: pointer;
+      transition: var(--transition);
+      user-select: none;
+    }
+
+    .choice-item:hover:not(.locked) {
+      border-color: var(--secondary);
+      background: #f8fafc;
+      transform: translateY(-2px);
+    }
+
+    .choice-item.selected {
+      border-color: var(--secondary);
+      background: var(--secondary-light);
+    }
+
+    .choice-letter {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: #e2e8f0;
+      color: var(--text);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 0.85rem;
+      flex-shrink: 0;
+      transition: var(--transition);
+      margin-top: 2px;
+    }
+
+    .choice-item.selected .choice-letter {
+      background: var(--secondary);
+      color: white;
+    }
+
+    .choice-text {
+      font-size: 0.98rem;
+      line-height: 1.45;
+      color: var(--text);
+      flex: 1;
+    }
+
+    /* Locked state after validation */
+    .choice-item.locked {
+      cursor: default;
+    }
+
+    .choice-item.correct {
+      border-color: var(--success) !important;
+      background: var(--success-light) !important;
+    }
+
+    .choice-item.correct .choice-letter {
+      background: var(--success) !important;
+      color: white !important;
+    }
+
+    .choice-item.incorrect {
+      border-color: var(--danger) !important;
+      background: var(--danger-light) !important;
+    }
+
+    .choice-item.incorrect .choice-letter {
+      background: var(--danger) !important;
+      color: white !important;
+    }
+
+    /* Feedback box */
+    .feedback-box {
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 24px;
+      animation: fadeIn 0.3s ease-out;
+    }
+
+    .feedback-box.correct {
+      background: var(--success-light);
+      border: 1px solid #bbf7d0;
+      color: #14532d;
+    }
+
+    .feedback-box.incorrect {
+      background: var(--danger-light);
+      border: 1px solid #fecaca;
+      color: #7f1d1d;
+    }
+
+    .feedback-header {
+      font-size: 1.05rem;
+      font-weight: 700;
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .feedback-text {
+      font-size: 0.95rem;
+      line-height: 1.55;
+    }
+
+    /* Actions */
+    .actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 12px;
+    }
+
+    .btn {
+      font-family: inherit;
+      font-size: 1rem;
+      font-weight: 600;
+      padding: 12px 24px;
+      border-radius: 999px;
+      border: none;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      transition: var(--transition);
+      text-decoration: none;
+    }
+
+    .btn-primary {
+      background: var(--primary);
+      color: white;
+    }
+
+    .btn-primary:hover:not(:disabled) {
+      background: var(--primary-light);
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0, 51, 102, 0.25);
+    }
+
+    .btn-primary:disabled {
+      background: #cbd5e1;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .btn-accent {
+      background: var(--accent);
+      color: white;
+    }
+
+    .btn-accent:hover {
+      background: var(--accent-light);
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(230, 81, 0, 0.25);
+    }
+
+    /* Results Card */
+    .results-card {
+      text-align: center;
+      padding: 16px 0;
+      animation: fadeIn 0.4s ease-out;
+    }
+
+    .score-circle {
+      width: 140px;
+      height: 140px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+      color: white;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 24px;
+      box-shadow: 0 10px 25px rgba(0, 51, 102, 0.25);
+    }
+
+    .score-value {
+      font-size: 3rem;
+      font-weight: 800;
+      line-height: 1;
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    .score-total {
+      font-size: 0.95rem;
+      opacity: 0.9;
+      font-weight: 500;
+    }
+
+    .result-badge {
+      display: inline-block;
+      padding: 6px 18px;
+      border-radius: 999px;
+      font-size: 0.95rem;
+      font-weight: 700;
+      margin-bottom: 16px;
+    }
+
+    .badge-excellent {
+      background: var(--success-light);
+      color: var(--success);
+      border: 1px solid #bbf7d0;
+    }
+
+    .badge-good {
+      background: var(--secondary-light);
+      color: #075985;
+      border: 1px solid #bae6fd;
+    }
+
+    .badge-review {
+      background: #fef3c7;
+      color: #92400e;
+      border: 1px solid #fde68a;
+    }
+
+    .result-message {
+      color: var(--text);
+      font-size: 1.05rem;
+      line-height: 1.6;
+      max-width: 600px;
+      margin: 0 auto 28px;
+    }
+
+    .review-list {
+      text-align: left;
+      margin-top: 36px;
+      border-top: 1px solid var(--border);
+      padding-top: 28px;
+    }
+
+    .review-item {
+      padding: 18px;
+      border-radius: 12px;
+      background: #f8fafc;
+      border: 1px solid var(--border);
+      margin-bottom: 14px;
+      transition: var(--transition);
+    }
+
+    .review-item-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-weight: 700;
+      margin-bottom: 8px;
+      font-size: 0.95rem;
+    }
+
+    .review-item.pass {
+      border-left: 4px solid var(--success);
+    }
+
+    .review-item.pass .review-item-header {
+      color: var(--success);
+    }
+
+    .review-item.fail {
+      border-left: 4px solid var(--danger);
+    }
+
+    .review-item.fail .review-item-header {
+      color: var(--danger);
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    @media (max-width: 600px) {
+      .card {
+        padding: 22px 18px;
+      }
+      .header h1 {
+        font-size: 1.45rem;
+      }
+      .question-title {
+        font-size: 1.1rem;
+      }
+      .btn {
+        width: 100%;
+        justify-content: center;
+      }
+      .actions {
+        flex-direction: column;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <!-- Top Navigation -->
+    <div class="nav-bar">
+      <a href="../index.html" class="nav-btn">
+        ← Retour au portail
+      </a>
+      <a href="index.html" class="module-link">
+        Module C Sécurisé II
+      </a>
+    </div>
+
+    <!-- En-tête -->
+    <div class="header">
+      <div class="badge-enssat">ENSSAT <span>/</span> CUPGE2 CYBER <span>•</span> C SÉCURISÉ II</div>
+      <h1>Quiz 2 : Fondements des Pointeurs & Arithmétique</h1>
+      <p>Auto-évaluation formative intermédiaire (Slide 17) validant l'acquisition des concepts présentés des slides 7 à 16</p>
+
+      <div class="purpose-alert">
+        <svg viewBox="0 0 24 24">
+          <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/>
+        </svg>
+        <div>
+          <strong>Validation d'étape (Slide 17) :</strong> Ce quiz valide votre maîtrise des adresses, du déréférencement, de la constante NULL, des pointeurs sur structures et de l'arithmétique des pointeurs avant d'aborder la gestion dynamique du Heap (Stack vs Heap).
+        </div>
+      </div>
+    </div>
+
+    <!-- Carte interactive principale -->
+    <div class="card" id="quiz-card">
+      <!-- Barre de progression -->
+      <div class="progress-container">
+        <div class="progress-meta">
+          <span id="progress-text">Question 1 sur 10</span>
+          <span class="current-score" id="score-counter">Score actuel : 0 / 0</span>
+        </div>
+        <div class="progress-bar-bg">
+          <div class="progress-bar-fill" id="progress-fill" style="width: 10%;"></div>
+        </div>
+      </div>
+
+      <!-- Zone de Question -->
+      <div id="question-container">
+        <div class="question-title" id="q-title">Chargement de la question...</div>
+        <div class="question-text" id="q-text"></div>
+        <div id="q-code-container"></div>
+
+        <div class="choices-list" id="choices-list">
+          <!-- Injecté par JavaScript -->
+        </div>
+
+        <div id="feedback-container"></div>
+      </div>
+
+      <!-- Barre d'actions -->
+      <div class="actions">
+        <button class="btn btn-primary" id="btn-validate" disabled>Valider ma réponse</button>
+        <button class="btn btn-accent" id="btn-next" style="display: none;">Question suivante →</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const questions = [
+      {
+        title: "1. Notion physique de variable et d'adresse mémoire",
+        text: "En langage C, que représente concrètement une variable en mémoire vive (RAM) ?",
+        code: null,
+        choices: [
+          { text: "Un emplacement mémoire contigu d'un ou plusieurs octets, identifié de manière unique par une adresse mémoire.", correct: true },
+          { text: "Une étiquette purement symbolique conservée dans un registre du processeur tout au long de l'exécution.", correct: false },
+          { text: "Un bloc standardisé occupant obligatoirement 8 octets quel que soit son type de données.", correct: false },
+          { text: "Une référence virtuelle n'occupant aucun octet physique avant la fin de l'exécution du programme.", correct: false }
+        ],
+        feedback: "En C, toute variable correspond à un emplacement contigu en mémoire vive (RAM). La taille en octets dépend du type (sizeof(type)), et cet emplacement est univoquement désigné par une adresse mémoire (l'adresse de son premier octet). Le nom de variable est une commodité humaine résolue par le compilateur."
+      },
+      {
+        title: "2. Définition exacte d'un pointeur",
+        text: "Selon la définition stricte vue en cours (Slide 9), qu'est-ce qu'un pointeur en langage C ?",
+        code: null,
+        choices: [
+          { text: "Une fonction système interne chargée d'effacer les variables inutilisées.", correct: false },
+          { text: "Une constante ou une variable stockant l'adresse mémoire (celle du premier octet) d'une autre variable.", correct: true },
+          { text: "Un duplicata physique du contenu d'une variable stocké dans la pile système.", correct: false },
+          { text: "Un type de variable restreint exclusivement aux chaînes de caractères littérales.", correct: false }
+        ],
+        feedback: "Un pointeur est une variable ou constante qui stocke l'adresse en mémoire d'une autre variable (précisément l'adresse du premier octet). On dit qu'il « pointe », « fait référence » ou « renvoie » vers la variable ciblée. S'il s'agit d'une variable, cette adresse peut être mise à jour à volonté."
+      },
+      {
+        title: "3. Rôles des opérateurs d'adresse '&' et de déréférencement '*'",
+        text: "Dans le fragment de code ci-dessous, quel est le rôle respectif des opérateurs '&' et '*' ?",
+        code: "int val = 10;\nint *ptr = &val;\nprintf(\"%d\\n\", *ptr);",
+        choices: [
+          { text: "'&' déréférence le pointeur et '*' calcule le produit arithmétique de val par ptr.", correct: false },
+          { text: "'&' est l'opérateur d'adresse (obtient l'adresse de val) et '*' est l'opérateur de déréférencement (accède à la valeur stockée à l'adresse).", correct: true },
+          { text: "'&' réserve de la mémoire sur le tas et '*' libère le bloc associé.", correct: false },
+          { text: "'&' compare deux pointeurs et '*' indique que la variable ptr est non modifiable.", correct: false }
+        ],
+        feedback: "L'esperluette '&' est l'opérateur d'adresse : &val retourne l'adresse mémoire où réside val. L'étoile '*' appliquée à un pointeur (*ptr) est l'opérateur de déréférencement : elle permet de lire ou modifier la donnée se trouvant à l'adresse pointée."
+      },
+      {
+        title: "4. La valeur sentinelle NULL",
+        text: "Que signifie la valeur NULL pour un pointeur et quelle est sa définition canonique en C ?",
+        code: "#define NULL ((void*)0)",
+        choices: [
+          { text: "Elle signifie que le pointeur référence une chaîne vide de 0 caractère (\"\").", correct: false },
+          { text: "Elle indique l'absence d'adresse valide (le pointeur ne pointe sur rien) et est définie comme ((void*)0).", correct: true },
+          { text: "Elle indique que le pointeur a été automatiquement alloué avec 0 octet.", correct: false },
+          { text: "Elle signale que le pointeur pointe obligatoirement vers la première case de la pile (stack).", correct: false }
+        ],
+        feedback: "La valeur NULL signale formellement qu'un pointeur ne contient aucune adresse valide (absence de cible mémoire). Elle est définie dans les en-têtes standard par ((void*)0). Tenter de déréférencer un pointeur valant NULL provoque une erreur de segmentation immédiate (Segfault / DoS)."
+      },
+      {
+        title: "5. Manipulation de structures via pointeur (Notation flèche)",
+        text: "Soit un pointeur de structure struct Personne *p. Quelle instruction est strictement équivalente à (*p).age = 30; ?",
+        code: "struct Personne {\n    char *nom;\n    int age;\n};\nstruct Personne *p = malloc(sizeof(struct Personne));\n// Comment écrire (*p).age = 30 de façon idiomatique ?",
+        choices: [
+          { text: "p.age = 30;", correct: false },
+          { text: "p->age = 30;", correct: true },
+          { text: "*p->age = 30;", correct: false },
+          { text: "&p.age = 30;", correct: false }
+        ],
+        feedback: "En C, l'accès à un champ d'une structure pointée via (*p).champ est quasi-systématiquement abrégé par l'opérateur flèche : p->champ. L'écriture p->age = 30; est l'idiome standardisé du langage C."
+      },
+      {
+        title: "6. Modification de la valeur pointée : *p1 = *p2",
+        text: "Analysez attentivement le programme ci-dessous (Slide 13-14). Que contiennent a et b après exécution ?",
+        code: "void main() {\n    int a = 24, b = 5;\n    int *p1, *p2;\n    p1 = &a;\n    p2 = &b;\n    *p1 = *p2;\n}",
+        choices: [
+          { text: "a vaut 5 et b vaut 5 (la valeur 5 a été copiée dans a via le déréférencement).", correct: true },
+          { text: "a vaut 24 et b vaut 24 (la valeur de a a écrasé celle de b).", correct: false },
+          { text: "a vaut 24 et b vaut 5, et p1 pointe désormais vers b.", correct: false },
+          { text: "Le programme plante avec une erreur de segmentation sur la dernière ligne.", correct: false }
+        ],
+        feedback: "*p1 = *p2; déréférence les deux pointeurs : l'instruction lit la valeur à l'adresse p2 (la valeur de b, soit 5) et l'écrit à l'adresse pointée par p1 (l'adresse de a). Par conséquent, a prend la valeur 5 tandis que b reste inchangée à 5. Les pointeurs p1 et p2 pointent toujours vers leurs adresses d'origine (&a et &b)."
+      },
+      {
+        title: "7. Réassignation d'adresses : p1 = p2",
+        text: "Si l'on remplace la dernière ligne du code précédent par l'instruction 'p1 = p2;' (sans astérisques), que se passe-t-il ?",
+        code: "int a = 24, b = 5;\nint *p1 = &a, *p2 = &b;\np1 = p2; // Que se passe-t-il ici ?",
+        choices: [
+          { text: "La variable a est modifiée et reçoit la valeur 5.", correct: false },
+          { text: "p1 reçoit l'adresse de b : p1 et p2 pointent désormais tous les deux vers la variable b.", correct: true },
+          { text: "La variable b est détruite et sa mémoire est libérée.", correct: false },
+          { text: "Une erreur de compilation se produit car deux pointeurs ne peuvent pas pointer sur la même variable.", correct: false }
+        ],
+        feedback: "p1 = p2; copie la valeur contenue dans p2 (qui est l'adresse de b) dans p1. Désormais, p1 stocke l'adresse de b. Les variables a et b restent strictement inchangées (a vaut toujours 24, b vaut 5), mais p1 et p2 pointent vers le même emplacement mémoire (&b)."
+      },
+      {
+        title: "8. Comparaison de pointeurs",
+        text: "Que teste précisément l'expression relationnelle 'p1 < p2' lorsque deux pointeurs pointent dans un même tableau ?",
+        code: "int tab[10];\nint *p1 = &tab[2];\nint *p2 = &tab[7];\nif (p1 < p2) { /* ... */ }",
+        choices: [
+          { text: "Elle compare les entiers stockés : elle vérifie si tab[2] est inférieur à tab[7].", correct: false },
+          { text: "Elle compare les adresses mémoire : elle vérifie si l'adresse p1 est située avant l'adresse p2 dans l'espace mémoire.", correct: true },
+          { text: "Elle compare le nombre d'octets alloués par le compilateur pour p1 et p2.", correct: false },
+          { text: "Elle teste si p1 est un sous-ensemble de pointeurs inclus dans p2.", correct: false }
+        ],
+        feedback: "Les opérateurs de comparaison (<, <=, >, >=, ==, !=) appliqués à des pointeurs comparent leurs adresses numériques. Pour des éléments d'un même tableau contigu, p1 < p2 est vrai si p1 pointe vers un élément d'indice antérieur à p2. Pour comparer les données pointées, il faut écrire *p1 < *p2."
+      },
+      {
+        title: "9. Arithmétique des pointeurs et prise en compte de sizeof",
+        text: "Sur une architecture où sizeof(int) == 4 octets, si int *ptr pointe à l'adresse 0x2000, quelle adresse contient ptr après l'instruction ptr = ptr + 2; ?",
+        code: "int *ptr = (int *) 0x2000;\nptr = ptr + 2; // Quelle est la nouvelle adresse numérique ?",
+        choices: [
+          { text: "0x2002 (on ajoute 2 octets).", correct: false },
+          { text: "0x2008 (car on avance de 2 × sizeof(int) = 8 octets).", correct: true },
+          { text: "0x2004 (l'addition sur pointeur n'avance que d'une seule unité mémoire).", correct: false },
+          { text: "0x2010 (les adresses sont obligatoirement multipliées par 8).", correct: false }
+        ],
+        feedback: "En C, l'arithmétique des pointeurs ne calcule pas en octets bruts : ajouter i déplace le pointeur de i * sizeof(type) octets. Pour un int* avec des entiers de 4 octets, ptr + 2 fait progresser l'adresse de 2 × 4 = 8 octets, soit 0x2000 + 8 = 0x2008."
+      },
+      {
+        title: "10. Incrémentation selon le type : char* vs int*",
+        text: "Pourquoi l'instruction ptr++ n'avance-t-elle pas du même nombre d'octets selon que ptr est déclaré char * ou int * ?",
+        code: "char *p_char;\nint *p_int;\n// Pourquoi p_char++ avance de 1 octet alors que p_int++ avance généralement de 4 octets ?",
+        choices: [
+          { text: "Parce que le compilateur utilise le type pointé pour multiplier l'incrément par sizeof(type) (1 octet pour char, souvent 4 pour int).", correct: true },
+          { text: "Parce que char* est alloué sur la pile et int* est alloué sur le tas.", correct: false },
+          { text: "Parce que char* n'autorise pas l'arithmétique des pointeurs et provoque un avertissement.", correct: false },
+          { text: "C'est une illusion : en réalité, tous les pointeurs avancent exactement d'un octet en mémoire vive.", correct: false }
+        ],
+        feedback: "Le compilateur connaît la taille en mémoire du type pointé (sizeof(type)). Quand vous avancez d'une unité (+1), le but est d'atteindre l'élément suivant du même type. Par conséquent, p_char++ avance de 1 * sizeof(char) = 1 octet, tandis que p_int++ avance de 1 * sizeof(int) = 4 octets."
+      }
+    ];
+
+    let currentIndex = 0;
+    let score = 0;
+    let selectedChoiceIndex = null;
+    let userAnswers = [];
+
+    const letters = ['A', 'B', 'C', 'D'];
+
+    function loadQuestion(index) {
+      const q = questions[index];
+      selectedChoiceIndex = null;
+
+      // Progress bar & counters
+      document.getElementById('progress-text').textContent = `Question ${index + 1} sur ${questions.length}`;
+      document.getElementById('progress-fill').style.width = `${((index + 1) / questions.length) * 100}%`;
+      document.getElementById('score-counter').textContent = `Score actuel : ${score} / ${index}`;
+
+      document.getElementById('q-title').textContent = q.title;
+      document.getElementById('q-text').textContent = q.text;
+
+      // Code snippet
+      const codeContainer = document.getElementById('q-code-container');
+      if (q.code) {
+        codeContainer.innerHTML = `<pre class="code-block"><code>${escapeHtml(q.code)}</code></pre>`;
+      } else {
+        codeContainer.innerHTML = '';
+      }
+
+      // Clear feedback
+      document.getElementById('feedback-container').innerHTML = '';
+
+      // Choices
+      const list = document.getElementById('choices-list');
+      list.innerHTML = '';
+
+      q.choices.forEach((c, i) => {
+        const item = document.createElement('div');
+        item.className = 'choice-item';
+        item.tabIndex = 0;
+        item.setAttribute('role', 'button');
+        item.setAttribute('aria-label', `Option ${letters[i]}: ${c.text}`);
+        item.innerHTML = `
+          <div class="choice-letter">${letters[i]}</div>
+          <div class="choice-text">${c.text}</div>
+        `;
+        const selectChoice = () => {
+          if (item.classList.contains('locked')) return;
+          document.querySelectorAll('.choice-item').forEach(el => el.classList.remove('selected'));
+          item.classList.add('selected');
+          selectedChoiceIndex = i;
+          document.getElementById('btn-validate').disabled = false;
+        };
+        item.addEventListener('click', selectChoice);
+        item.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            selectChoice();
+          }
+        });
+        list.appendChild(item);
+      });
+
+      document.getElementById('btn-validate').style.display = 'inline-flex';
+      document.getElementById('btn-validate').disabled = true;
+      document.getElementById('btn-next').style.display = 'none';
+    }
+
+    function escapeHtml(text) {
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+
+    function validateAnswer() {
+      if (selectedChoiceIndex === null) return;
+
+      const q = questions[currentIndex];
+      const items = document.querySelectorAll('.choice-item');
+      const isCorrect = q.choices[selectedChoiceIndex].correct;
+
+      if (isCorrect) score++;
+
+      userAnswers.push({
+        qIndex: currentIndex,
+        chosen: selectedChoiceIndex,
+        correct: isCorrect
+      });
+
+      // Style choices
+      items.forEach((item, i) => {
+        item.classList.add('locked');
+        if (q.choices[i].correct) {
+          item.classList.add('correct');
+        } else if (i === selectedChoiceIndex && !isCorrect) {
+          item.classList.add('incorrect');
+        }
+      });
+
+      // Show feedback
+      const feedbackBox = document.createElement('div');
+      feedbackBox.className = `feedback-box ${isCorrect ? 'correct' : 'incorrect'}`;
+      feedbackBox.innerHTML = `
+        <div class="feedback-header">
+          ${isCorrect ? '✓ Exact ! Excellente maîtrise notionnelle.' : '✗ Incorrect ! Prenez le temps d\'analyser la règle.'}
+        </div>
+        <div class="feedback-text">
+          <strong>Éclairage notionnel :</strong> ${q.feedback}
+        </div>
+      `;
+      document.getElementById('feedback-container').appendChild(feedbackBox);
+
+      // Buttons
+      document.getElementById('btn-validate').style.display = 'none';
+      const btnNext = document.getElementById('btn-next');
+      btnNext.style.display = 'inline-flex';
+      btnNext.textContent = (currentIndex < questions.length - 1) ? 'Question suivante →' : 'Consulter mon bilan d\'étape →';
+      document.getElementById('score-counter').textContent = `Score : ${score} / ${currentIndex + 1}`;
+    }
+
+    function showResults() {
+      const pct = Math.round((score / questions.length) * 100);
+      let badgeClass = 'badge-good';
+      let badgeText = 'Bonne compréhension des bases';
+      let message = 'Vous maîtrisez la syntaxe et les mécanismes essentiels des pointeurs. Vous êtes prêt pour la suite du cours (Stack vs Heap et allocation dynamique).';
+
+      if (pct === 100) {
+        badgeClass = 'badge-excellent';
+        badgeText = '🏆 Score Parfait : 10 / 10 !';
+        message = 'Bravo ! Vous manipulez les adresses, le déréférencement et l\'arithmétique des pointeurs avec une totale aisance.';
+      } else if (pct >= 80) {
+        badgeClass = 'badge-excellent';
+        badgeText = 'Très bonne maîtrise';
+        message = 'Excellentes bases ! Quelques nuances de syntaxe ou d\'arithmétique peuvent être revues pour parfaire votre compréhension.';
+      } else if (pct < 60) {
+        badgeClass = 'badge-review';
+        badgeText = '⚠️ Révisions conseillées';
+        message = 'Certaines confusions persistent entre valeur et adresse (*p vs p) ou dans le calcul d\'arithmétique des pointeurs. Relisez attentivement les slides 7 à 16 avant d\'aborder la mémoire dynamique.';
+      }
+
+      let reviewHtml = '';
+      userAnswers.forEach((ans, i) => {
+        const q = questions[ans.qIndex];
+        reviewHtml += `
+          <div class="review-item ${ans.correct ? 'pass' : 'fail'}">
+            <div class="review-item-header">
+              <span>Question ${i + 1} : ${ans.correct ? '✓ Validée' : '✗ Erreur sur la question'}</span>
+              <span>${ans.correct ? '+1 pt' : '0 pt'}</span>
+            </div>
+            <p style="font-weight: 700; margin-bottom: 6px; color: var(--text);">${q.title}</p>
+            <p style="font-size: 0.92rem; color: var(--text-muted); line-height: 1.5;">${q.feedback}</p>
+          </div>
+        `;
+      });
+
+      const card = document.getElementById('quiz-card');
+      card.innerHTML = `
+        <div class="results-card">
+          <div class="score-circle">
+            <div class="score-value">${score}</div>
+            <div class="score-total">sur ${questions.length}</div>
+          </div>
+          <div class="result-badge ${badgeClass}">${badgeText} (${pct}%)</div>
+          <p class="result-message">${message}</p>
+          
+          <div style="display: flex; gap: 12px; justify-content: center; flex-wrap: wrap;">
+            <button class="btn btn-primary" onclick="location.reload()">Recommencer le quiz</button>
+            <a href="quiz-programmation-defensive.html" class="btn btn-accent">Faire le Quiz 1 (Programmation Défensive) →</a>
+          </div>
+
+          <div class="review-list">
+            <h3 style="color: var(--primary); margin-bottom: 16px; font-size: 1.2rem;">📋 Récapitulatif pédagogique de vos réponses :</h3>
+            ${reviewHtml}
+          </div>
+        </div>
+      `;
+    }
+
+    document.getElementById('btn-validate').addEventListener('click', validateAnswer);
+    document.getElementById('btn-next').addEventListener('click', () => {
+      currentIndex++;
+      if (currentIndex < questions.length) {
+        loadQuestion(currentIndex);
+      } else {
+        showResults();
+      }
+    });
+
+    // Initialisation
+    loadQuestion(0);
+  </script>
+</body>
+</html>
