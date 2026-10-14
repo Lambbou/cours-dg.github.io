@@ -1,0 +1,1759 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Visualisation Interactive du Tas (Heap) : Cycle de Vie & Pointeurs — C Sécurisé II</title>
+  <meta name="description" content="Visualisation interactive du Tas (Heap) en C : les 4 étapes de l'allocation dynamique (malloc, écriture, free, NULL), lien entre Pile et Tas, adresses RAM et vulnérabilités.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary: #003366;
+      --primary-light: #0055a5;
+      --secondary: #0077b6;
+      --secondary-light: #e0f2fe;
+      --accent: #e65100;
+      --accent-light: #ff833a;
+      --heap-amber: #d97706;
+      --heap-bg: #fffbeb;
+      --dark: #1e293b;
+      --light-bg: #f8fafc;
+      --card-bg: #ffffff;
+      --success: #16a34a;
+      --success-light: #dcfce7;
+      --warning: #d97706;
+      --warning-light: #fef3c7;
+      --danger: #dc2626;
+      --danger-light: #fee2e2;
+      --purple: #7c3aed;
+      --purple-light: #ede9fe;
+      --border: #e2e8f0;
+      --text: #1e293b;
+      --text-muted: #64748b;
+      --radius: 16px;
+      --radius-sm: 10px;
+      --shadow: 0 10px 25px -5px rgba(0, 51, 102, 0.08), 0 8px 10px -6px rgba(0, 51, 102, 0.04);
+      --transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Outfit', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: linear-gradient(135deg, #f1f5f9 0%, #e2eafc 100%);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      line-height: 1.55;
+    }
+
+    a { color: inherit; text-decoration: none; }
+
+    .container {
+      width: 100%;
+      max-width: 1320px;
+      margin: 0 auto;
+      padding: 0 20px;
+    }
+
+    /* Top Nav */
+    .top-nav {
+      padding: 20px 0;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .nav-left { display: flex; align-items: center; gap: 10px; }
+
+    .nav-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      color: var(--primary);
+      font-weight: 600;
+      font-size: 0.9rem;
+      padding: 8px 16px;
+      border-radius: 999px;
+      background: white;
+      border: 1px solid var(--border);
+      box-shadow: 0 2px 6px rgba(0,0,0,0.04);
+      transition: var(--transition);
+    }
+
+    .nav-btn:hover {
+      background: var(--secondary-light);
+      border-color: var(--secondary);
+      transform: translateX(-2px);
+    }
+
+    .nav-link-switch {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      color: var(--primary);
+      font-weight: 700;
+      font-size: 0.9rem;
+      padding: 8px 16px;
+      border-radius: 999px;
+      background: #e0f2fe;
+      border: 1px solid #bae6fd;
+      transition: var(--transition);
+    }
+
+    .nav-link-switch:hover {
+      background: #bae6fd;
+      transform: translateY(-2px);
+    }
+
+    .badge-enssat {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--primary);
+      color: white;
+      padding: 6px 14px;
+      border-radius: 999px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+    }
+
+    .badge-enssat span { color: var(--accent-light); }
+
+    /* Header */
+    .header-box {
+      background: white;
+      border-radius: var(--radius);
+      padding: 26px 32px;
+      margin-bottom: 22px;
+      box-shadow: var(--shadow);
+      border: 1px solid var(--border);
+    }
+
+    .header-meta {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 10px;
+      flex-wrap: wrap;
+    }
+
+    .meta-tag {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.76rem;
+      font-weight: 700;
+      color: var(--accent);
+      background: #fff4ed;
+      padding: 3px 10px;
+      border-radius: 6px;
+    }
+
+    .header-title {
+      font-size: 1.8rem;
+      font-weight: 800;
+      color: var(--primary);
+      margin-bottom: 6px;
+    }
+
+    .header-subtitle {
+      color: var(--text-muted);
+      font-size: 0.98rem;
+    }
+
+    /* 4-Step Lifecycle Progress Bar */
+    .lifecycle-banner {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+      margin-top: 18px;
+      padding-top: 16px;
+      border-top: 1px solid var(--border);
+    }
+
+    .lc-step {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 14px;
+      border-radius: 10px;
+      background: #f8fafc;
+      border: 1.5px solid var(--border);
+      transition: var(--transition);
+      opacity: 0.65;
+    }
+
+    .lc-step.active {
+      opacity: 1;
+      background: white;
+      border-color: var(--secondary);
+      box-shadow: 0 4px 12px rgba(0, 119, 182, 0.12);
+      transform: translateY(-2px);
+    }
+
+    .lc-step.done {
+      opacity: 0.9;
+      background: #f0fdf4;
+      border-color: #86efac;
+    }
+
+    .lc-step.danger-state {
+      opacity: 1;
+      background: #fef2f2;
+      border-color: #f87171;
+    }
+
+    .lc-num {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: var(--primary);
+      color: white;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.82rem;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .lc-step.done .lc-num { background: var(--success); }
+    .lc-step.danger-state .lc-num { background: var(--danger); }
+
+    .lc-text strong {
+      display: block;
+      font-size: 0.85rem;
+      color: var(--primary);
+    }
+
+    .lc-text span {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.73rem;
+      color: var(--text-muted);
+    }
+
+    /* Main Grid */
+    .workspace-grid {
+      display: grid;
+      grid-template-columns: 400px 1fr;
+      gap: 22px;
+      margin-bottom: 32px;
+      align-items: start;
+    }
+
+    /* Left Panel: Controls */
+    .control-panel {
+      background: white;
+      border-radius: var(--radius);
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow);
+      padding: 22px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .panel-title {
+      font-size: 1.15rem;
+      font-weight: 800;
+      color: var(--primary);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .selected-ptr-pill {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.76rem;
+      background: var(--secondary-light);
+      color: var(--secondary);
+      padding: 3px 9px;
+      border-radius: 999px;
+      font-weight: 700;
+    }
+
+    /* Action Step Cards */
+    .action-card {
+      background: #f8fafc;
+      border: 1.5px solid var(--border);
+      border-radius: 12px;
+      padding: 14px;
+      transition: var(--transition);
+    }
+
+    .action-card.highlight-step {
+      border-color: var(--secondary);
+      background: #f0f9ff;
+      box-shadow: 0 0 0 3px rgba(0, 119, 182, 0.08);
+    }
+
+    .action-card.highlight-warn {
+      border-color: var(--danger);
+      background: #fff1f2;
+      box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.1);
+    }
+
+    .step-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 8px;
+    }
+
+    .step-tag {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.73rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      padding: 2px 8px;
+      border-radius: 6px;
+    }
+
+    .tag-1 { background: #dbeafe; color: #1e40af; }
+    .tag-2 { background: #dcfce7; color: #15803d; }
+    .tag-3 { background: #ffedd5; color: #c2410c; }
+    .tag-4 { background: #ede9fe; color: #6d28d9; }
+
+    .step-desc {
+      font-size: 0.82rem;
+      color: var(--text-muted);
+      margin-bottom: 10px;
+    }
+
+    /* Object Picker */
+    .obj-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 7px;
+      margin-bottom: 10px;
+    }
+
+    .obj-item {
+      padding: 8px 10px;
+      border: 1.5px solid var(--border);
+      border-radius: 8px;
+      background: white;
+      cursor: pointer;
+      text-align: left;
+      transition: var(--transition);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .obj-item:hover {
+      border-color: var(--secondary);
+    }
+
+    .obj-item.active {
+      border-color: var(--primary);
+      background: #eff6ff;
+      box-shadow: inset 0 0 0 1px var(--primary);
+    }
+
+    .obj-emoji { font-size: 1.35rem; }
+
+    .obj-meta { display: flex; flex-direction: column; }
+    .obj-name { font-weight: 700; font-size: 0.82rem; color: var(--text); }
+    .obj-type { font-family: 'JetBrains Mono', monospace; font-size: 0.7rem; color: var(--text-muted); }
+
+    /* Inputs */
+    .input-inline {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+
+    .input-inline label {
+      font-size: 0.8rem;
+      font-weight: 600;
+      white-space: nowrap;
+    }
+
+    .form-input {
+      width: 100%;
+      padding: 7px 10px;
+      border: 1.5px solid var(--border);
+      border-radius: 8px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.84rem;
+      background: white;
+    }
+
+    /* Buttons */
+    .btn {
+      font-family: inherit;
+      font-size: 0.86rem;
+      font-weight: 700;
+      padding: 9px 14px;
+      border-radius: 999px;
+      border: none;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      transition: var(--transition);
+      width: 100%;
+    }
+
+    .btn:disabled {
+      background: #cbd5e1 !important;
+      color: #64748b !important;
+      cursor: not-allowed;
+      transform: none !important;
+      box-shadow: none !important;
+    }
+
+    .btn-step1 { background: var(--primary); color: white; }
+    .btn-step1:hover:not(:disabled) { background: var(--primary-light); transform: translateY(-1px); }
+
+    .btn-step2 { background: var(--success); color: white; }
+    .btn-step2:hover:not(:disabled) { background: #15803d; transform: translateY(-1px); }
+
+    .btn-step3 { background: var(--accent); color: white; }
+    .btn-step3:hover:not(:disabled) { background: var(--accent-light); transform: translateY(-1px); }
+
+    .btn-step4 { background: var(--purple); color: white; }
+    .btn-step4:hover:not(:disabled) { background: #6d28d9; transform: translateY(-1px); }
+
+    /* Vulnerability Sandbox Buttons */
+    .trap-box {
+      border-top: 1px dashed var(--border);
+      padding-top: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .trap-title {
+      font-size: 0.76rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      color: var(--danger);
+      letter-spacing: 0.4px;
+      margin-bottom: 2px;
+    }
+
+    .trap-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 6px;
+    }
+
+    .btn-trap {
+      padding: 7px 10px;
+      border-radius: 8px;
+      font-size: 0.76rem;
+      font-weight: 700;
+      cursor: pointer;
+      border: 1px solid #fecaca;
+      background: #fef2f2;
+      color: #b91c1c;
+      transition: var(--transition);
+      text-align: center;
+    }
+
+    .btn-trap:hover {
+      background: #fee2e2;
+      border-color: #f87171;
+    }
+
+    /* Right Panel: Visual Memory Arena */
+    .arena-card {
+      background: white;
+      border-radius: var(--radius);
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow);
+      padding: 22px;
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+    }
+
+    .arena-top-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 10px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .arena-title {
+      font-size: 1.15rem;
+      font-weight: 800;
+      color: var(--primary);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .stats-row {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .stat-badge {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.78rem;
+      font-weight: 700;
+      padding: 4px 10px;
+      border-radius: 6px;
+      background: #f1f5f9;
+      color: var(--primary);
+    }
+
+    .stat-badge.leak-active {
+      background: var(--danger-light);
+      color: var(--danger);
+      animation: pulseWarn 1.5s infinite;
+    }
+
+    @keyframes pulseWarn {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.04); }
+    }
+
+    /* Memory Split Container with SVG Overlay */
+    .memory-stage {
+      position: relative;
+      display: grid;
+      grid-template-columns: 270px 1fr;
+      gap: 36px;
+      min-height: 440px;
+      align-items: stretch;
+    }
+
+    #svg-connector-layer {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 10;
+    }
+
+    /* Column 1: Stack Pointers */
+    .stack-zone {
+      background: #f8fafc;
+      border: 2px solid #cbd5e1;
+      border-radius: 14px;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      z-index: 2;
+    }
+
+    .zone-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 6px;
+    }
+
+    .zone-title {
+      font-size: 0.85rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--primary);
+    }
+
+    .zone-sub {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      margin-bottom: 14px;
+    }
+
+    .ptr-list {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      flex: 1;
+    }
+
+    .ptr-card {
+      background: white;
+      border: 2px solid #93c5fd;
+      border-radius: 10px;
+      padding: 10px 12px;
+      cursor: pointer;
+      transition: var(--transition);
+      position: relative;
+      box-shadow: 0 3px 8px rgba(0, 51, 102, 0.05);
+    }
+
+    .ptr-card.selected {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(0, 85, 165, 0.18);
+    }
+
+    .ptr-card.state-dangling {
+      border-color: var(--danger);
+      background: #fef2f2;
+    }
+
+    .ptr-card.state-null {
+      border-color: var(--success);
+      background: #f0fdf4;
+    }
+
+    .ptr-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 4px;
+    }
+
+    .ptr-var-decl {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.84rem;
+      font-weight: 800;
+      color: var(--primary);
+    }
+
+    .ptr-own-addr {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.68rem;
+      color: var(--text-muted);
+      background: #f1f5f9;
+      padding: 1px 5px;
+      border-radius: 4px;
+    }
+
+    .ptr-value-box {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.78rem;
+      font-weight: 700;
+      padding: 5px 8px;
+      border-radius: 6px;
+      background: #eff6ff;
+      color: #1d4ed8;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-top: 6px;
+    }
+
+    .ptr-card.state-dangling .ptr-value-box {
+      background: #fee2e2;
+      color: #b91c1c;
+    }
+
+    .ptr-card.state-null .ptr-value-box {
+      background: #dcfce7;
+      color: #15803d;
+    }
+
+    .ptr-status-pill {
+      font-family: 'Outfit', sans-serif;
+      font-size: 0.66rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      padding: 2px 6px;
+      border-radius: 4px;
+    }
+
+    /* Column 2: Heap Warehouse */
+    .heap-zone {
+      background: radial-gradient(circle at 50% 0%, #fffbeb 0%, #fef3c7 100%);
+      border: 2px dashed #f59e0b;
+      border-radius: 14px;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      z-index: 2;
+    }
+
+    .lockers-grid {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      flex: 1;
+    }
+
+    .locker-card {
+      background: white;
+      border: 2px solid #d97706;
+      border-radius: 12px;
+      padding: 14px;
+      box-shadow: 0 6px 16px rgba(217, 119, 6, 0.1);
+      transition: var(--transition);
+      position: relative;
+      cursor: pointer;
+    }
+
+    .locker-card.selected {
+      box-shadow: 0 0 0 3px rgba(217, 119, 6, 0.3);
+    }
+
+    .locker-card.uninitialized {
+      border-style: dashed;
+      background: #fffbeb;
+    }
+
+    .locker-card.leaked {
+      border-color: var(--danger);
+      background: #fff1f2;
+      box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.2);
+    }
+
+    .locker-card.freed-ghost {
+      border-color: #cbd5e1;
+      border-style: dotted;
+      background: rgba(248, 250, 252, 0.65);
+      opacity: 0.65;
+    }
+
+    .locker-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+      padding-bottom: 6px;
+      border-bottom: 1px solid #f1f5f9;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+
+    .locker-addr-badge {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.78rem;
+      font-weight: 800;
+      background: #fef3c7;
+      color: #92400e;
+      padding: 3px 8px;
+      border-radius: 6px;
+    }
+
+    .locker-state-tag {
+      font-size: 0.72rem;
+      font-weight: 700;
+      padding: 2px 8px;
+      border-radius: 999px;
+    }
+
+    /* Byte-level inspection inside locker */
+    .byte-strip {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(54px, 1fr));
+      gap: 5px;
+      margin-bottom: 10px;
+    }
+
+    .byte-box {
+      border: 1.5px solid #cbd5e1;
+      border-radius: 6px;
+      padding: 4px 2px;
+      text-align: center;
+      font-family: 'JetBrains Mono', monospace;
+      background: #f8fafc;
+    }
+
+    .byte-box.garbage {
+      border-color: #f59e0b;
+      background: #fffbeb;
+      color: #b45309;
+    }
+
+    .byte-box.valid-byte {
+      border-color: #10b981;
+      background: #ecfdf5;
+      color: #065f46;
+    }
+
+    .byte-box.freed-byte {
+      border-color: #cbd5e1;
+      background: #f1f5f9;
+      color: #94a3b8;
+    }
+
+    .byte-offset {
+      display: block;
+      font-size: 0.62rem;
+      color: var(--text-muted);
+    }
+
+    .byte-hex {
+      font-size: 0.76rem;
+      font-weight: 700;
+    }
+
+    /* Real-world Object inside Locker */
+    .locker-object-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: #f8fafc;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 8px 12px;
+    }
+
+    .locker-obj-left {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .locker-obj-icon { font-size: 1.7rem; }
+
+    .locker-obj-title {
+      font-weight: 700;
+      font-size: 0.88rem;
+      color: var(--primary);
+    }
+
+    .locker-obj-sub {
+      font-size: 0.74rem;
+      color: var(--text-muted);
+    }
+
+    .locker-val-pill {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.88rem;
+      font-weight: 800;
+      background: white;
+      border: 1.5px solid var(--border);
+      padding: 4px 10px;
+      border-radius: 6px;
+      color: var(--primary);
+    }
+
+    /* Bottom Terminal & C Code Inspector */
+    .inspector-bar {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      background: #1e293b;
+      color: #f8fafc;
+      border-radius: 12px;
+      padding: 16px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.8rem;
+    }
+
+    .code-pane-title {
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: #94a3b8;
+      margin-bottom: 8px;
+      border-bottom: 1px solid #334155;
+      padding-bottom: 4px;
+      display: flex;
+      justify-content: space-between;
+    }
+
+    .code-lines {
+      line-height: 1.6;
+      white-space: pre-wrap;
+    }
+
+    .code-hl {
+      background: rgba(56, 189, 248, 0.2);
+      color: #7dd3fc;
+      padding: 1px 4px;
+      border-radius: 4px;
+    }
+
+    .code-err {
+      background: rgba(248, 113, 113, 0.25);
+      color: #fca5a5;
+      padding: 1px 4px;
+      border-radius: 4px;
+    }
+
+    .diagnostic-pane {
+      background: #0f172a;
+      border-radius: 8px;
+      padding: 12px;
+      border-left: 4px solid #38bdf8;
+      font-family: 'Outfit', sans-serif;
+      font-size: 0.88rem;
+      line-height: 1.5;
+    }
+
+    .diagnostic-pane.diag-warn { border-left-color: #f59e0b; }
+    .diagnostic-pane.diag-danger { border-left-color: #ef4444; background: #2a1215; }
+    .diagnostic-pane.diag-success { border-left-color: #10b981; }
+
+    /* Memo Cards */
+    .memo-section {
+      background: white;
+      border-radius: var(--radius);
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow);
+      padding: 26px;
+      margin-bottom: 40px;
+    }
+
+    .memo-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 16px;
+      margin-top: 14px;
+    }
+
+    .memo-card {
+      background: #fffbeb;
+      border: 1px solid #fde68a;
+      border-radius: 12px;
+      padding: 16px;
+    }
+
+    .memo-card h4 {
+      font-size: 0.98rem;
+      font-weight: 700;
+      color: #92400e;
+      margin-bottom: 6px;
+    }
+
+    .memo-card p {
+      font-size: 0.85rem;
+      color: #78350f;
+    }
+
+    footer.site-footer {
+      margin-top: auto;
+      padding: 24px 0;
+      border-top: 1px solid var(--border);
+      background: rgba(255,255,255,0.6);
+      text-align: center;
+      font-size: 0.85rem;
+      color: var(--text-muted);
+    }
+
+    @media (max-width: 1024px) {
+      .workspace-grid { grid-template-columns: 1fr; }
+      .memory-stage { grid-template-columns: 1fr; gap: 20px; }
+      #svg-connector-layer { display: none; }
+      .lifecycle-banner { grid-template-columns: repeat(2, 1fr); }
+      .inspector-bar { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <!-- Navigation -->
+    <nav class="top-nav">
+      <div class="nav-left">
+        <a href="../index.html" class="nav-btn">← Portail</a>
+        <a href="index.html" class="nav-btn">Module C Sécurisé II</a>
+      </div>
+      <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+        <a href="visualisation-stack.html" class="nav-link-switch">
+          🍽️ Voir la Visualisation de la Pile (Stack) →
+        </a>
+        <div class="badge-enssat">ENSSAT <span>/</span> CUPGE2 CYBER</div>
+      </div>
+    </nav>
+
+    <!-- Header + 4-Step Stepper -->
+    <header class="header-box">
+      <div class="header-meta">
+        <span class="meta-tag">Allocation Dynamique (Heap)</span>
+        <span class="meta-tag">Cycle de vie en 4 étapes</span>
+        <span class="meta-tag" style="background:#dcfce7; color:#15803d;">Programmation Défensive</span>
+      </div>
+      <h1 class="header-title">Le Tas (Heap) : Entrepôt de Casiers & Cycle de Vie d'un Pointeur</h1>
+      <p class="header-subtitle">
+        Dans le Tas, l'espace mémoire est loué manuellement via un pointeur situé sur la Pile. Suivez les <strong>4 étapes obligatoires</strong> d'une gestion mémoire saine, ou testez les pièges classiques (Fuite mémoire, <em>Dangling Pointer</em>, <em>Use-After-Free</em>).
+      </p>
+
+      <!-- Visual 4-Step Lifecycle Indicator -->
+      <div class="lifecycle-banner" id="lifecycle-banner">
+        <div class="lc-step active" id="lc-step-1">
+          <div class="lc-num">1</div>
+          <div class="lc-text">
+            <strong>Réserver le casier</strong>
+            <span>p = malloc(sizeof(T))</span>
+          </div>
+        </div>
+        <div class="lc-step" id="lc-step-2">
+          <div class="lc-num">2</div>
+          <div class="lc-text">
+            <strong>Remplir la mémoire</strong>
+            <span>*p = valeur</span>
+          </div>
+        </div>
+        <div class="lc-step" id="lc-step-3">
+          <div class="lc-num">3</div>
+          <div class="lc-text">
+            <strong>Libérer le casier</strong>
+            <span>free(p)</span>
+          </div>
+        </div>
+        <div class="lc-step" id="lc-step-4">
+          <div class="lc-num">4</div>
+          <div class="lc-text">
+            <strong>Sécuriser le pointeur</strong>
+            <span>p = NULL</span>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- Main Interactive Workspace -->
+    <main class="workspace-grid">
+      <!-- Left Column: Step-by-Step Controls -->
+      <section class="control-panel">
+        <div class="panel-title">
+          <span>🎛️ Commandes pas-à-pas</span>
+          <span class="selected-ptr-pill" id="active-ptr-label">Aucun pointeur</span>
+        </div>
+
+        <!-- STEP 1: MALLOC -->
+        <div class="action-card highlight-step" id="card-step-1">
+          <div class="step-header">
+            <span class="step-tag tag-1">Étape 1 • Allocation</span>
+            <code style="font-size:0.75rem; color:var(--primary);">malloc()</code>
+          </div>
+          <p class="step-desc">Choisissez un objet du quotidien (type C) pour louer un casier de la bonne taille sur le Tas :</p>
+
+          <div class="obj-grid">
+            <button class="obj-item active" data-type="int" data-size="4" data-icon="☕" data-label="Tasse à café" data-default="42">
+              <span class="obj-emoji">☕</span>
+              <div class="obj-meta">
+                <span class="obj-name">Tasse (int)</span>
+                <span class="obj-type">4 octets</span>
+              </div>
+            </button>
+            <button class="obj-item" data-type="char" data-size="1" data-icon="🪙" data-label="Pièce" data-default="'A'">
+              <span class="obj-emoji">🪙</span>
+              <div class="obj-meta">
+                <span class="obj-name">Pièce (char)</span>
+                <span class="obj-type">1 octet</span>
+              </div>
+            </button>
+            <button class="obj-item" data-type="short" data-size="2" data-icon="🔑" data-label="Clé de consigne" data-default="256">
+              <span class="obj-emoji">🔑</span>
+              <div class="obj-meta">
+                <span class="obj-name">Clé (short)</span>
+                <span class="obj-type">2 octets</span>
+              </div>
+            </button>
+            <button class="obj-item" data-type="double" data-size="8" data-icon="💻" data-label="PC Portable" data-default="3.14">
+              <span class="obj-emoji">💻</span>
+              <div class="obj-meta">
+                <span class="obj-name">Laptop (double)</span>
+                <span class="obj-type">8 octets</span>
+              </div>
+            </button>
+          </div>
+
+          <button class="btn btn-step1" id="btn-malloc">
+            📦 1. Réserver un nouveau casier (malloc)
+          </button>
+        </div>
+
+        <!-- STEP 2: WRITE / FILL -->
+        <div class="action-card" id="card-step-2">
+          <div class="step-header">
+            <span class="step-tag tag-2">Étape 2 • Écriture</span>
+            <code style="font-size:0.75rem; color:var(--success);">*p = valeur</code>
+          </div>
+          <p class="step-desc">Le casier réservé contient des octets résiduels (<em>garbage</em> <code>0x??</code>). Déposez votre valeur :</p>
+          <div class="input-inline">
+            <label for="input-val">Valeur :</label>
+            <input type="text" id="input-val" class="form-input" value="42" maxlength="12">
+          </div>
+          <button class="btn btn-step2" id="btn-write" disabled>
+            📥 2. Écrire dans le casier (*p = ...)
+          </button>
+        </div>
+
+        <!-- STEP 3: FREE -->
+        <div class="action-card" id="card-step-3">
+          <div class="step-header">
+            <span class="step-tag tag-3">Étape 3 • Désallocation</span>
+            <code style="font-size:0.75rem; color:var(--accent);">free(p)</code>
+          </div>
+          <p class="step-desc">Rendez le casier à l'entrepôt. Attention : le pointeur gardera l'adresse en mémoire (<em>Dangling</em>) !</p>
+          <button class="btn btn-step3" id="btn-free" disabled>
+            🗑️ 3. Libérer le casier (free)
+          </button>
+        </div>
+
+        <!-- STEP 4: NULLIFY -->
+        <div class="action-card" id="card-step-4">
+          <div class="step-header">
+            <span class="step-tag tag-4">Étape 4 • Sécurisation</span>
+            <code style="font-size:0.75rem; color:var(--purple);">p = NULL</code>
+          </div>
+          <p class="step-desc">Règle d'or défensive : effacez l'adresse obsolète du pointeur pour neutraliser tout accès futur.</p>
+          <button class="btn btn-step4" id="btn-null" disabled>
+            🛡️ 4. Assigner le pointeur à NULL
+          </button>
+        </div>
+
+        <!-- Vulnerability Sandbox -->
+        <div class="trap-box">
+          <div class="trap-title">⚡ Tester les bogues critiques sur le pointeur actif :</div>
+          <div class="trap-grid">
+            <button class="btn-trap" id="btn-trap-leak" title="Quitter la fonction sans appeler free()">
+              🚨 Fuite Mémoire (Perdre p)
+            </button>
+            <button class="btn-trap" id="btn-trap-uaf" title="Lire/Écrire via un pointeur déjà libéré">
+              💥 Use-After-Free (*p)
+            </button>
+            <button class="btn-trap" id="btn-trap-dfree" title="Appeler free() une seconde fois">
+              💣 Double Free (free(p))
+            </button>
+            <button class="btn-trap" id="btn-reset-all" style="background:#f1f5f9; color:#475569; border-color:#cbd5e1;">
+              🧹 Réinitialiser tout
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <!-- Right Column: Visual Memory Stage -->
+      <section class="arena-card">
+        <div class="arena-top-bar">
+          <div class="arena-title">
+            <span>🔍</span> Représentation en RAM : Pile (Pointeurs) ↔ Tas (Casiers)
+          </div>
+          <div class="stats-row">
+            <span class="stat-badge" id="stat-active-blocks">Blocs actifs : 0</span>
+            <span class="stat-badge" id="stat-bytes">Tas utilisé : 0 o</span>
+            <span class="stat-badge" id="stat-leaks">Fuites (Leaks) : 0</span>
+          </div>
+        </div>
+
+        <!-- Split Visual Stage with SVG Connector Layer -->
+        <div class="memory-stage" id="memory-stage">
+          <svg id="svg-connector-layer"></svg>
+
+          <!-- Left: LA PILE (Variables Pointeurs) -->
+          <div class="stack-zone">
+            <div class="zone-header">
+              <span class="zone-title">📚 La Pile (Stack)</span>
+              <span style="font-family:'JetBrains Mono',monospace; font-size:0.7rem; color:var(--text-muted);">Adresses hautes</span>
+            </div>
+            <p class="zone-sub">Stocke les variables locales, dont les <strong>pointeurs</strong> (8 octets sur 64-bit) :</p>
+
+            <div class="ptr-list" id="ptr-list">
+              <div id="empty-stack-hint" style="text-align:center; padding:40px 10px; color:var(--text-muted); font-size:0.84rem;">
+                Aucun pointeur déclaré.<br>Cliquez sur <strong>« 1. Réserver un casier »</strong>.
+              </div>
+            </div>
+          </div>
+
+          <!-- Right: LE TAS (Casiers alloués dynamiquement) -->
+          <div class="heap-zone">
+            <div class="zone-header">
+              <span class="zone-title" style="color:#92400e;">📦 Le Tas (Heap Warehouse)</span>
+              <span style="font-family:'JetBrains Mono',monospace; font-size:0.7rem; color:#b45309;">0x55a0...</span>
+            </div>
+            <p class="zone-sub" style="color:#b45309;">Entrepôt de mémoire dynamique. Les blocs survivent jusqu'à l'appel explicite à <code>free()</code> :</p>
+
+            <div class="lockers-grid" id="lockers-grid">
+              <div id="empty-heap-hint" style="text-align:center; padding:60px 20px; color:#b45309; font-size:0.88rem;">
+                <div style="font-size:2.2rem; margin-bottom:6px;">🏭</div>
+                <strong>Entrepôt du Tas vide</strong><br>
+                Les octets sont disponibles pour une allocation avec <code>malloc()</code>.
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Live Code & Pedagogical Diagnostic -->
+        <div class="inspector-bar">
+          <div>
+            <div class="code-pane-title">
+              <span>Trace d'exécution C</span>
+              <span id="code-status-tag">Prêt</span>
+            </div>
+            <div class="code-lines" id="live-code">
+// Cliquez sur l'Étape 1 (malloc) pour démarrer le cycle de vie.</div>
+          </div>
+          <div>
+            <div class="code-pane-title">
+              <span>Analyse Mémoire & Sécurité</span>
+              <span>ENSSAT Cyber</span>
+            </div>
+            <div class="diagnostic-pane" id="diag-box">
+              <strong>En attente d'allocation.</strong><br>
+              Sur le Tas, on ne peut jamais déposer un objet sans avoir d'abord réservé son casier avec <code>malloc()</code>.
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <!-- Memo Cards -->
+    <section class="memo-section">
+      <h3 style="color:var(--primary); font-size:1.25rem; font-weight:800;">
+        📌 Synthèse : Les 4 commandements de l'allocation dynamique en C
+      </h3>
+      <div class="memo-grid">
+        <div class="memo-card">
+          <h4>1. Réserver & Vérifier (`malloc`)</h4>
+          <p><code>malloc(sizeof(T))</code> découpe un bloc dans le Tas et renvoie son adresse de début. Le contenu initial est indéterminé (<em>garbage</em> <code>0x??</code>). Vérifiez toujours que le retour n'est pas <code>NULL</code>.</p>
+        </div>
+        <div class="memo-card">
+          <h4>2. Déréférencer (`*p = val`)</h4>
+          <p>Le pointeur <code>p</code> réside sur la Pile mais pointe vers le Tas. Écrire <code>*p = 42</code> suit la flèche pour remplir les octets du casier sur le Tas.</p>
+        </div>
+        <div class="memo-card">
+          <h4>3. Rendre les clés (`free`)</h4>
+          <p>Si la fonction se termine et détruit <code>p</code> sur la Pile sans avoir appelé <code>free(p)</code>, le casier sur le Tas devient orphelin : c'est une <strong>Fuite Mémoire (Memory Leak)</strong>.</p>
+        </div>
+        <div class="memo-card">
+          <h4>4. Neutraliser (`p = NULL`)</h4>
+          <p><code>free(p)</code> détruit le casier mais ne modifie pas la valeur de <code>p</code> ! <code>p</code> devient un <strong>Dangling Pointer</strong>. Assignez immédiatement <code>p = NULL;</code> pour éviter tout <em>Use-After-Free</em>.</p>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <footer class="site-footer">
+    <div class="container">
+      <p>C Sécurisé II — CUPGE2 Cyber • ENSSAT Lannion</p>
+    </div>
+  </footer>
+
+  <script>
+    // State Management
+    let allocations = []; // Array of { id, ptrName, type, size, icon, label, val, stackAddr, heapAddr, status: 'allocated'|'filled'|'freed'|'null'|'leaked', bytes: [] }
+    let selectedId = null;
+    let ptrCounter = 1;
+    let nextStackAddr = 0x7ffdf440;
+    let nextHeapAddr = 0x55a01800;
+
+    let currentObjConfig = {
+      type: 'int',
+      size: 4,
+      icon: '☕',
+      label: 'Tasse à café',
+      defaultVal: '42'
+    };
+
+    // DOM Elements
+    const ptrListEl = document.getElementById('ptr-list');
+    const lockersGridEl = document.getElementById('lockers-grid');
+    const emptyStackHint = document.getElementById('empty-stack-hint');
+    const emptyHeapHint = document.getElementById('empty-heap-hint');
+    const svgLayer = document.getElementById('svg-connector-layer');
+
+    const btnMalloc = document.getElementById('btn-malloc');
+    const btnWrite = document.getElementById('btn-write');
+    const btnFree = document.getElementById('btn-free');
+    const btnNull = document.getElementById('btn-null');
+    const inputVal = document.getElementById('input-val');
+
+    const activePtrLabel = document.getElementById('active-ptr-label');
+    const liveCodeEl = document.getElementById('live-code');
+    const diagBoxEl = document.getElementById('diag-box');
+    const codeStatusTag = document.getElementById('code-status-tag');
+
+    // Object Selector Listeners
+    document.querySelectorAll('.obj-item').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.obj-item').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        currentObjConfig = {
+          type: btn.dataset.type,
+          size: parseInt(btn.dataset.size, 10),
+          icon: btn.dataset.icon,
+          label: btn.dataset.label,
+          defaultVal: btn.dataset.default
+        };
+        inputVal.value = currentObjConfig.defaultVal;
+      });
+    });
+
+    function toHex(num) {
+      return '0x' + num.toString(16).toUpperCase();
+    }
+
+    function generateGarbageBytes(size) {
+      const hexChars = '0123456789ABCDEF';
+      let arr = [];
+      for (let i = 0; i < size; i++) {
+        arr.push('?' + hexChars[Math.floor(Math.random() * 16)]);
+      }
+      return arr;
+    }
+
+    function valueToHexBytes(valStr, type, size) {
+      let bytes = [];
+      if (type === 'char') {
+        let code = valStr.replace(/'/g, '').charCodeAt(0) || 65;
+        bytes.push(code.toString(16).toUpperCase().padStart(2, '0'));
+      } else if (type === 'int' || type === 'short') {
+        let num = parseInt(valStr, 10);
+        if (isNaN(num)) num = 42;
+        for (let i = 0; i < size; i++) {
+          let b = (num >> (i * 8)) & 0xFF;
+          bytes.push(b.toString(16).toUpperCase().padStart(2, '0'));
+        }
+      } else {
+        // Double representation simplified for visual clarity
+        const sample = ['1F', '85', 'EB', '51', 'B8', '1E', '09', '40'];
+        for (let i = 0; i < size; i++) bytes.push(sample[i % sample.length]);
+      }
+      return bytes;
+    }
+
+    function getSelectedAlloc() {
+      return allocations.find(a => a.id === selectedId) || null;
+    }
+
+    // STEP 1: MALLOC
+    btnMalloc.addEventListener('click', () => {
+      const activeCount = allocations.filter(a => a.status !== 'null').length;
+      if (activeCount >= 4) {
+        setDiagnostic('warn', 'Entrepôt plein pour la démo ! Libérez ou réinitialisez les casiers existants avant d\'en allouer un nouveau.');
+        return;
+      }
+
+      const id = Date.now();
+      const ptrName = `p${ptrCounter++}`;
+      const stackAddr = nextStackAddr;
+      nextStackAddr -= 8; // Pointers take 8 bytes on 64-bit stack
+      const heapAddr = nextHeapAddr;
+      nextHeapAddr += currentObjConfig.size + 16; // 16-byte alignment padding
+
+      const newAlloc = {
+        id,
+        ptrName,
+        type: currentObjConfig.type,
+        size: currentObjConfig.size,
+        icon: currentObjConfig.icon,
+        label: currentObjConfig.label,
+        val: null,
+        stackAddr,
+        heapAddr,
+        status: 'allocated', // 1: allocated, 2: filled, 3: freed (dangling), 4: null, 'leaked'
+        bytes: generateGarbageBytes(currentObjConfig.size)
+      };
+
+      allocations.push(newAlloc);
+      selectedId = id;
+      inputVal.value = currentObjConfig.defaultVal;
+
+      renderAll();
+      updateCodeAndDiag(
+        `// ÉTAPE 1 : Réservation du casier sur le Tas\n<span class="code-hl">${newAlloc.type} *${newAlloc.ptrName} = malloc(sizeof(${newAlloc.type}));</span>\n// ${newAlloc.ptrName} (sur la Pile à ${toHex(stackAddr)}) reçoit l'adresse ${toHex(heapAddr)}.`,
+        'info',
+        `<strong>Étape 1 accomplie (malloc) :</strong> Un casier de <strong>${newAlloc.size} octet(s)</strong> est réservé à l'adresse <code>${toHex(heapAddr)}</code>. Ses octets contiennent pour l'instant des valeurs résiduelles indéterminées (<em>garbage</em>). Passez à l'<strong>Étape 2</strong> pour y ranger votre objet !`
+      );
+    });
+
+    // STEP 2: WRITE (*p = val)
+    btnWrite.addEventListener('click', () => {
+      const item = getSelectedAlloc();
+      if (!item || (item.status !== 'allocated' && item.status !== 'filled')) return;
+
+      const rawVal = inputVal.value.trim() || currentObjConfig.defaultVal;
+      item.val = rawVal;
+      item.status = 'filled';
+      item.bytes = valueToHexBytes(rawVal, item.type, item.size);
+
+      renderAll();
+      updateCodeAndDiag(
+        `// ÉTAPE 2 : Déréférencement et écriture en mémoire\n${item.type} *${item.ptrName} = malloc(sizeof(${item.type}));\n<span class="code-hl">*${item.ptrName} = ${rawVal};</span> // Écrit dans les ${item.size} octet(s) à ${toHex(item.heapAddr)}`,
+        'success',
+        `<strong>Étape 2 accomplie (*${item.ptrName} = ${rawVal}) :</strong> En suivant la flèche du pointeur (déréférencement), l'objet <strong>${item.label}</strong> a été écrit dans les octets <code>${toHex(item.heapAddr)}</code>. Quand vous n'en avez plus besoin, passez à l'<strong>Étape 3 (free)</strong>.`
+      );
+    });
+
+    // STEP 3: FREE (free(p))
+    btnFree.addEventListener('click', () => {
+      const item = getSelectedAlloc();
+      if (!item || (item.status !== 'allocated' && item.status !== 'filled')) return;
+
+      item.status = 'freed'; // Becomes Dangling Pointer!
+      renderAll();
+      updateCodeAndDiag(
+        `// ÉTAPE 3 : Restitution du casier au système\nfree(${item.ptrName});\n<span class="code-err">// ⚠️ DANGER : ${item.ptrName} vaut toujours ${toHex(item.heapAddr)} (Dangling Pointer) !</span>`,
+        'warn',
+        `<strong>Étape 3 accomplie (free) — ATTENTION :</strong> Le casier <code>${toHex(item.heapAddr)}</code> a été rendu au système, <strong>MAIS</strong> le pointeur <code>${item.ptrName}</code> sur la Pile contient toujours cette adresse ! C'est un <strong>Pointeur Suspendu (Dangling Pointer)</strong>. Exécutez vite l'<strong>Étape 4 (${item.ptrName} = NULL)</strong> !`
+      );
+    });
+
+    // STEP 4: NULLIFY (p = NULL)
+    btnNull.addEventListener('click', () => {
+      const item = getSelectedAlloc();
+      if (!item || item.status !== 'freed') return;
+
+      item.status = 'null';
+      renderAll();
+      updateCodeAndDiag(
+        `// ÉTAPE 4 : Sécurisation défensive du pointeur\nfree(${item.ptrName});\n<span class="code-hl">${item.ptrName} = NULL;</span> // Le pointeur vaut 0x0 : plus aucun risque de Use-After-Free !`,
+        'success',
+        `<strong>Étape 4 accomplie (${item.ptrName} = NULL) :</strong> Cycle de vie parfait ! Le pointeur sur la Pile est maintenant à <code>NULL (0x0)</code>. Toute tentative d'accès futur est neutralisée proprement.`
+      );
+    });
+
+    // TRAP 1: Memory Leak
+    document.getElementById('btn-trap-leak').addEventListener('click', () => {
+      const item = getSelectedAlloc();
+      if (!item || (item.status !== 'allocated' && item.status !== 'filled')) {
+        setDiagnostic('warn', 'Sélectionnez ou créez d\'abord un casier actif (Étape 1 ou 2) pour simuler une fuite mémoire.');
+        return;
+      }
+
+      item.status = 'leaked';
+      renderAll();
+      updateCodeAndDiag(
+        `void fonction_buggee() {\n    ${item.type} *${item.ptrName} = malloc(sizeof(${item.type}));\n    <span class="code-err">return; // ❌ Oubli de free(${item.ptrName}) !</span>\n}\n// '${item.ptrName}' est détruit avec la Pile, mais le bloc ${toHex(item.heapAddr)} reste bloqué sur le Tas !`,
+        'danger',
+        `<strong>🚨 FUITE MÉMOIRE (Memory Leak) :</strong> La variable pointeur <code>${item.ptrName}</code> a disparu de la Pile (ou a été écrasée), mais le casier <code>${toHex(item.heapAddr)}</code> n'a jamais été libéré ! Plus personne ne possède son adresse : ces ${item.size} octets sont perdus jusqu'à l'arrêt du programme.`
+      );
+    });
+
+    // TRAP 2: Use-After-Free
+    document.getElementById('btn-trap-uaf').addEventListener('click', () => {
+      const item = getSelectedAlloc();
+      if (!item || item.status !== 'freed') {
+        setDiagnostic('warn', 'Pour déclencher un Use-After-Free, amenez d\'abord un pointeur à l\'Étape 3 (libéré avec free(), mais pas encore mis à NULL).');
+        return;
+      }
+
+      updateCodeAndDiag(
+        `free(${item.ptrName}); // Casier ${toHex(item.heapAddr)} déjà libéré\n<span class="code-err">*${item.ptrName} = 999; // 💥 CRASH / USE-AFTER-FREE !</span>\n// Écriture illégale via un pointeur suspendu (Dangling Pointer).`,
+        'danger',
+        `<strong>💥 FAILLE CRITIQUE : Use-After-Free !</strong> Vous avez déréférencé <code>${item.ptrName}</code> alors qu'il pointe vers le casier <code>${toHex(item.heapAddr)}</code> déjà détruit à l'Étape 3. Conséquence : corruption silencieuse du Tas, faille de sécurité exploitable ou <em>Segmentation Fault</em>.`
+      );
+    });
+
+    // TRAP 3: Double Free
+    document.getElementById('btn-trap-dfree').addEventListener('click', () => {
+      const item = getSelectedAlloc();
+      if (!item || item.status !== 'freed') {
+        setDiagnostic('warn', 'Pour tester un Double Free, libérez d\'abord un casier à l\'Étape 3 (sans faire p = NULL).');
+        return;
+      }
+
+      updateCodeAndDiag(
+        `free(${item.ptrName});\n// ... plus loin dans le code :\n<span class="code-err">free(${item.ptrName}); // 💣 DOUBLE FREE ! Corruption de l'allocateur glibc !</span>`,
+        'danger',
+        `<strong>💣 ERREUR FATALE : Double Free !</strong> Appeler <code>free(${item.ptrName})</code> une seconde fois sur l'adresse <code>${toHex(item.heapAddr)}</code> corrompt les listes internes du gestionnaire de mémoire (<code>malloc</code>) et provoque un arrêt immédiat (<code>SIGABRT</code>). Si vous aviez fait <code>${item.ptrName} = NULL</code>, <code>free(NULL)</code> n'aurait rien fait !`
+      );
+    });
+
+    // Reset All
+    document.getElementById('btn-reset-all').addEventListener('click', () => {
+      allocations = [];
+      selectedId = null;
+      ptrCounter = 1;
+      nextStackAddr = 0x7ffdf440;
+      nextHeapAddr = 0x55a01800;
+      renderAll();
+      updateCodeAndDiag(
+        `// Mémoire réinitialisée.\n// Cliquez sur l'Étape 1 (malloc) pour commencer.`,
+        'info',
+        `<strong>Entrepôt remis à zéro.</strong> Prêt pour une nouvelle simulation.`
+      );
+    });
+
+    function updateCodeAndDiag(codeHtml, type, diagHtml) {
+      liveCodeEl.innerHTML = codeHtml;
+      setDiagnostic(type, diagHtml);
+    }
+
+    function setDiagnostic(type, html) {
+      diagBoxEl.className = 'diagnostic-pane';
+      if (type === 'warn') diagBoxEl.classList.add('diag-warn');
+      if (type === 'danger') diagBoxEl.classList.add('diag-danger');
+      if (type === 'success') diagBoxEl.classList.add('diag-success');
+      diagBoxEl.innerHTML = html;
+    }
+
+    // Update Stepper Banner & Buttons based on selected pointer
+    function syncControlsWithSelection() {
+      const item = getSelectedAlloc();
+
+      // Reset stepper classes
+      ['lc-step-1', 'lc-step-2', 'lc-step-3', 'lc-step-4'].forEach(id => {
+        document.getElementById(id).className = 'lc-step';
+      });
+      ['card-step-1', 'card-step-2', 'card-step-3', 'card-step-4'].forEach(id => {
+        document.getElementById(id).className = 'action-card';
+      });
+
+      if (!item) {
+        activePtrLabel.textContent = 'Nouveau pointeur';
+        document.getElementById('lc-step-1').classList.add('active');
+        document.getElementById('card-step-1').classList.add('highlight-step');
+        btnWrite.disabled = true;
+        btnFree.disabled = true;
+        btnNull.disabled = true;
+        return;
+      }
+
+      activePtrLabel.textContent = `Cible : ${item.ptrName} (${item.type}*)`;
+
+      if (item.status === 'allocated') {
+        document.getElementById('lc-step-1').classList.add('done');
+        document.getElementById('lc-step-2').classList.add('active');
+        document.getElementById('card-step-2').classList.add('highlight-step');
+        btnWrite.disabled = false;
+        btnFree.disabled = false;
+        btnNull.disabled = true;
+        codeStatusTag.textContent = 'Étape 1/4 : Alloué (non initialisé)';
+      } else if (item.status === 'filled') {
+        document.getElementById('lc-step-1').classList.add('done');
+        document.getElementById('lc-step-2').classList.add('done');
+        document.getElementById('lc-step-3').classList.add('active');
+        document.getElementById('card-step-3').classList.add('highlight-step');
+        btnWrite.disabled = false;
+        btnFree.disabled = false;
+        btnNull.disabled = true;
+        codeStatusTag.textContent = 'Étape 2/4 : En service';
+      } else if (item.status === 'freed') {
+        document.getElementById('lc-step-1').classList.add('done');
+        document.getElementById('lc-step-2').classList.add('done');
+        document.getElementById('lc-step-3').classList.add('danger-state');
+        document.getElementById('lc-step-4').classList.add('active');
+        document.getElementById('card-step-4').classList.add('highlight-warn');
+        btnWrite.disabled = true;
+        btnFree.disabled = true;
+        btnNull.disabled = false;
+        codeStatusTag.textContent = '⚠️ Étape 3/4 : Dangling Pointer !';
+      } else if (item.status === 'null') {
+        ['lc-step-1', 'lc-step-2', 'lc-step-3', 'lc-step-4'].forEach(id => {
+          document.getElementById(id).classList.add('done');
+        });
+        document.getElementById('card-step-1').classList.add('highlight-step');
+        btnWrite.disabled = true;
+        btnFree.disabled = true;
+        btnNull.disabled = true;
+        codeStatusTag.textContent = '✅ Étape 4/4 : Cycle terminé (NULL)';
+      } else if (item.status === 'leaked') {
+        document.getElementById('lc-step-1').classList.add('done');
+        document.getElementById('lc-step-3').classList.add('danger-state');
+        btnWrite.disabled = true;
+        btnFree.disabled = true;
+        btnNull.disabled = true;
+        codeStatusTag.textContent = '🚨 FUITE MÉMOIRE';
+      }
+    }
+
+    function renderAll() {
+      // Render Stack Pointers (exclude leaked ones since their stack variable died)
+      const stackItems = allocations.filter(a => a.status !== 'leaked');
+      ptrListEl.innerHTML = '';
+
+      if (stackItems.length === 0) {
+        ptrListEl.appendChild(emptyStackHint);
+        emptyStackHint.style.display = 'block';
+      } else {
+        emptyStackHint.style.display = 'none';
+        stackItems.forEach(item => {
+          const card = document.createElement('div');
+          card.id = `ptr-dom-${item.id}`;
+          let stateClass = '';
+          let statusLabel = 'Actif';
+          let pillStyle = 'background:#dbeafe; color:#1e40af;';
+          let displayedAddr = toHex(item.heapAddr);
+
+          if (item.status === 'freed') {
+            stateClass = 'state-dangling';
+            statusLabel = '⚠️ Dangling';
+            pillStyle = 'background:#fecaca; color:#991b1b;';
+          } else if (item.status === 'null') {
+            stateClass = 'state-null';
+            statusLabel = '🛡️ NULL';
+            pillStyle = 'background:#bbf7d0; color:#166534;';
+            displayedAddr = '0x0 (NULL)';
+          }
+
+          card.className = `ptr-card ${stateClass} ${item.id === selectedId ? 'selected' : ''}`;
+          card.innerHTML = `
+            <div class="ptr-top">
+              <span class="ptr-var-decl">${item.type} *${item.ptrName}</span>
+              <span class="ptr-own-addr">&${item.ptrName} = ${toHex(item.stackAddr)}</span>
+            </div>
+            <div class="ptr-value-box">
+              <span>${displayedAddr}</span>
+              <span class="ptr-status-pill" style="${pillStyle}">${statusLabel}</span>
+            </div>
+          `;
+          card.addEventListener('click', () => {
+            selectedId = item.id;
+            renderAll();
+          });
+          ptrListEl.appendChild(card);
+        });
+      }
+
+      // Render Heap Lockers
+      lockersGridEl.innerHTML = '';
+      if (allocations.length === 0) {
+        lockersGridEl.appendChild(emptyHeapHint);
+        emptyHeapHint.style.display = 'block';
+      } else {
+        emptyHeapHint.style.display = 'none';
+        allocations.forEach(item => {
+          const locker = document.createElement('div');
+          locker.id = `locker-dom-${item.id}`;
+
+          let cardClass = 'locker-card';
+          if (item.id === selectedId) cardClass += ' selected';
+          if (item.status === 'allocated') cardClass += ' uninitialized';
+          if (item.status === 'leaked') cardClass += ' leaked';
+          if (item.status === 'freed' || item.status === 'null') cardClass += ' freed-ghost';
+
+          let stateBadge = '';
+          if (item.status === 'allocated') {
+            stateBadge = `<span class="locker-state-tag" style="background:#fef3c7; color:#b45309;">⏳ Étape 1 : Alloué (Garbage)</span>`;
+          } else if (item.status === 'filled') {
+            stateBadge = `<span class="locker-state-tag" style="background:#dcfce7; color:#15803d;">✅ Étape 2 : Initialisé</span>`;
+          } else if (item.status === 'freed') {
+            stateBadge = `<span class="locker-state-tag" style="background:#fee2e2; color:#b91c1c;">🗑️ Étape 3 : Désalloué (free)</span>`;
+          } else if (item.status === 'null') {
+            stateBadge = `<span class="locker-state-tag" style="background:#e2e8f0; color:#475569;">🔒 Libéré & Pointeur NULL</span>`;
+          } else if (item.status === 'leaked') {
+            stateBadge = `<span class="locker-state-tag" style="background:#dc2626; color:white;">🚨 ORPHELIN (Fuite Mémoire !)</span>`;
+          }
+
+          // Render individual bytes
+          let bytesHtml = '';
+          for (let i = 0; i < item.size; i++) {
+            let bClass = 'byte-box';
+            let bVal = item.bytes[i] || '??';
+            if (item.status === 'allocated') bClass += ' garbage';
+            else if (item.status === 'filled' || item.status === 'leaked') bClass += ' valid-byte';
+            else { bClass += ' freed-byte'; bVal = '--'; }
+
+            bytesHtml += `
+              <div class="${bClass}">
+                <span class="byte-offset">+${i}</span>
+                <span class="byte-hex">0x${bVal}</span>
+              </div>
+            `;
+          }
+
+          let innerObjectHtml = '';
+          if (item.status === 'allocated') {
+            innerObjectHtml = `
+              <div class="locker-object-row" style="border-style:dashed; background:#fffbeb;">
+                <span style="font-size:0.8rem; color:#b45309;">Casier vide réservé pour <strong>${item.label}</strong> (<code>sizeof(${item.type}) = ${item.size}</code>).</span>
+                <span class="locker-val-pill" style="color:#d97706;">Indéterminé</span>
+              </div>
+            `;
+          } else if (item.status === 'filled' || item.status === 'leaked') {
+            innerObjectHtml = `
+              <div class="locker-object-row">
+                <div class="locker-obj-left">
+                  <span class="locker-obj-icon">${item.icon}</span>
+                  <div>
+                    <div class="locker-obj-title">${item.label}</div>
+                    <div class="locker-obj-sub">Plage : ${toHex(item.heapAddr)} → ${toHex(item.heapAddr + item.size - 1)}</div>
+                  </div>
+                </div>
+                <div class="locker-val-pill">${item.val ?? '??'}</div>
+              </div>
+            `;
+          } else {
+            innerObjectHtml = `
+              <div class="locker-object-row" style="background:#f1f5f9;">
+                <span style="font-size:0.78rem; color:#64748b;">Espace restitué à l'allocateur (ne plus lire ni écrire ici).</span>
+              </div>
+            `;
+          }
+
+          locker.className = cardClass;
+          locker.innerHTML = `
+            <div class="locker-head">
+              <span class="locker-addr-badge">Casier @ ${toHex(item.heapAddr)} (${item.size} o)</span>
+              ${stateBadge}
+            </div>
+            <div class="byte-strip">${bytesHtml}</div>
+            ${innerObjectHtml}
+          `;
+          locker.addEventListener('click', () => {
+            selectedId = item.id;
+            renderAll();
+          });
+          lockersGridEl.appendChild(locker);
+        });
+      }
+
+      // Update Top Stats
+      const activeBlocks = allocations.filter(a => a.status === 'allocated' || a.status === 'filled' || a.status === 'leaked');
+      const leakBlocks = allocations.filter(a => a.status === 'leaked');
+      const usedBytes = activeBlocks.reduce((acc, a) => acc + a.size, 0);
+
+      document.getElementById('stat-active-blocks').textContent = `Blocs réservés : ${activeBlocks.length}`;
+      document.getElementById('stat-bytes').textContent = `Tas occupé : ${usedBytes} octet(s)`;
+      const leakBadge = document.getElementById('stat-leaks');
+      leakBadge.textContent = `Fuites (Leaks) : ${leakBlocks.length}`;
+      leakBadge.className = leakBlocks.length > 0 ? 'stat-badge leak-active' : 'stat-badge';
+
+      syncControlsWithSelection();
+      requestAnimationFrame(drawSvgArrows);
+    }
+
+    function drawSvgArrows() {
+      svgLayer.innerHTML = '';
+      const stageRect = document.getElementById('memory-stage').getBoundingClientRect();
+
+      // Define markers
+      const defs = document.createElementNS('http://www.w3.org/2000/svg', 'defs');
+      defs.innerHTML = `
+        <marker id="arrow-valid" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto">
+          <path d="M0,0 L8,4 L0,8 Z" fill="#0077b6" />
+        </marker>
+        <marker id="arrow-dangling" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto">
+          <path d="M0,0 L8,4 L0,8 Z" fill="#dc2626" />
+        </marker>
+      `;
+      svgLayer.appendChild(defs);
+
+      allocations.forEach(item => {
+        if (item.status === 'leaked' || item.status === 'null') return;
+
+        const ptrDom = document.getElementById(`ptr-dom-${item.id}`);
+        const lockerDom = document.getElementById(`locker-dom-${item.id}`);
+        if (!ptrDom || !lockerDom) return;
+
+        const pRect = ptrDom.getBoundingClientRect();
+        const lRect = lockerDom.getBoundingClientRect();
+
+        const x1 = pRect.right - stageRect.left;
+        const y1 = pRect.top + pRect.height / 2 - stageRect.top;
+        const x2 = lRect.left - stageRect.left - 4;
+        const y2 = lRect.top + 26 - stageRect.top;
+
+        const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+        const cX1 = x1 + (x2 - x1) * 0.45;
+        const cX2 = x1 + (x2 - x1) * 0.55;
+        path.setAttribute('d', `M ${x1} ${y1} C ${cX1} ${y1}, ${cX2} ${y2}, ${x2} ${y2}`);
+        path.setAttribute('fill', 'none');
+        path.setAttribute('stroke-width', item.id === selectedId ? '3' : '2');
+
+        if (item.status === 'freed') {
+          path.setAttribute('stroke', '#dc2626');
+          path.setAttribute('stroke-dasharray', '6,4');
+          path.setAttribute('marker-end', 'url(#arrow-dangling)');
+        } else {
+          path.setAttribute('stroke', '#0077b6');
+          path.setAttribute('marker-end', 'url(#arrow-valid)');
+        }
+
+        svgLayer.appendChild(path);
+      });
+    }
+
+    window.addEventListener('resize', () => requestAnimationFrame(drawSvgArrows));
+    renderAll();
+  </script>
+</body>
+</html>

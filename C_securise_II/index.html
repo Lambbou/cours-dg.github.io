@@ -459,6 +459,7 @@
         <span class="meta-tag">Code : /C_securise_II/</span>
         <span class="meta-tag">Semestre 3 • CUPGE2 Cyber</span>
         <span class="meta-tag" style="background: #dcfce7; color: #15803d;">2 Quiz interactifs</span>
+        <span class="meta-tag" style="background: #e0f2fe; color: #0369a1;">2 Visualisations Mémoire</span>
       </div>
       <h1 class="hero-title">Le Pouvoir, les Pièges des Pointeurs & la Programmation Défensive en C</h1>
       <p class="hero-subtitle">
@@ -551,6 +552,76 @@
       </div>
     </section>
 
+    <!-- Section Visualisations Interactives : Stack vs Heap -->
+    <section>
+      <h2 class="section-title">
+        <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/></svg>
+        Visualisations Interactives : La Pile & Le Tas en Pratique
+      </h2>
+
+      <div class="cards-grid">
+        <!-- Visualisation Stack -->
+        <article class="card">
+          <span class="card-badge" style="background: #e0f2fe; color: #0369a1;">🍽️ Métaphore Officielle • LIFO</span>
+          <h3 class="card-title">La Stack : La Pile d'Assiettes</h3>
+          <p class="card-desc">
+            Visualisation interactive reprenant la métaphore du cours : empilez (push) et dépilez (pop) des assiettes de diamètres proportionnels aux types primitifs (<code>char</code>, <code>short</code>, <code>int</code>, <code>double</code>). Observez le pointeur de pile (SP) et l'adresse de chaque assiette en RAM.
+          </p>
+          <ul class="card-topics">
+            <li>
+              <svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+              <span>Tailles d'assiettes proportionnelles à <code>sizeof(type)</code></span>
+            </li>
+            <li>
+              <svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+              <span>Adresses hexadécimales & déplacement de SP</span>
+            </li>
+            <li>
+              <svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+              <span>Respect absolu de la règle LIFO (Last-In, First-Out)</span>
+            </li>
+            <li>
+              <svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+              <span>Scénarios d'appel de fonction et de Stack Overflow</span>
+            </li>
+          </ul>
+          <a href="visualisation-stack.html" class="btn btn-primary" style="width: 100%;">
+            Ouvrir la Visualisation Stack (Assiettes) →
+          </a>
+        </article>
+
+        <!-- Visualisation Heap -->
+        <article class="card">
+          <span class="card-badge" style="background: #fef3c7; color: #b45309;">📦 Objets du Quotidien • malloc & free</span>
+          <h3 class="card-title">Le Tas (Heap) : Réservation & Objets</h3>
+          <p class="card-desc">
+            Visualisation des 3 temps de la mémoire dynamique : réservez d'abord un casier vide sur le tas (<code>malloc</code>), déposez-y un objet du quotidien (pièce 🪙, clé 🔑, tasse ☕, laptop 💻), et constatez que l'espace survit à la fonction tant qu'il n'est pas détruit (<code>free</code>).
+          </p>
+          <ul class="card-topics">
+            <li>
+              <svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+              <span>Créer l'espace AVANT de le remplir</span>
+            </li>
+            <li>
+              <svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+              <span>Objets du quotidien pour chaque type primitif</span>
+            </li>
+            <li>
+              <svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+              <span>Démonstration visuelle de Fuite Mémoire (Memory Leak)</span>
+            </li>
+            <li>
+              <svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+              <span>Pointeurs suspendus (Dangling) & Use-After-Free</span>
+            </li>
+          </ul>
+          <a href="visualisation-heap.html" class="btn btn-accent" style="width: 100%;">
+            Ouvrir la Visualisation Heap (Objets) →
+          </a>
+        </article>
+      </div>
+    </section>
+
     <!-- Support de cours & Fiches -->
     <section>
       <h2 class="section-title">
@@ -574,7 +645,7 @@
           </a>
         </article>
 
-        <!-- Récapitulatifs IA -->
+        <!-- Fiches de Révision -->
         <article class="card">
           <span class="card-badge">Fiches Synthétiques</span>
           <h3 class="card-title">Fiches de Révision Notionales</h3>
@@ -582,27 +653,27 @@
             Fiches thématiques condensées pour revoir rapidement une notion précise du cours avant les séances de TP et les jalons du projet :
           </p>
           <div style="display: flex; flex-direction: column; gap: 8px;">
-            <a href="Resumes_IA/prog_defensive.html" class="guide-link">
+            <a href="fiches_resume/prog_defensive.html" class="guide-link">
               <span>🛡️ Programmation Défensive</span>
               <span>→</span>
             </a>
-            <a href="Resumes_IA/arithmétique_pointeurs.html" class="guide-link">
+            <a href="fiches_resume/arithmétique_pointeurs.html" class="guide-link">
               <span>📐 Arithmétique des Pointeurs</span>
               <span>→</span>
             </a>
-            <a href="Resumes_IA/pile_vs_stack.html" class="guide-link">
+            <a href="fiches_resume/pile_vs_stack.html" class="guide-link">
               <span>📚 Pile (Stack) vs Tas (Heap)</span>
               <span>→</span>
             </a>
-            <a href="Resumes_IA/gestion_memoire.html" class="guide-link">
+            <a href="fiches_resume/gestion_memoire.html" class="guide-link">
               <span>📦 Gestion Dynamique de la Mémoire</span>
               <span>→</span>
             </a>
-            <a href="Resumes_IA/memoire.html" class="guide-link">
+            <a href="fiches_resume/memoire.html" class="guide-link">
               <span>💾 Organisation de la Mémoire</span>
               <span>→</span>
             </a>
-            <a href="Resumes_IA/fonctions.html" class="guide-link">
+            <a href="fiches_resume/fonctions.html" class="guide-link">
               <span>⚙️ Pointeurs et Fonctions</span>
               <span>→</span>
             </a>

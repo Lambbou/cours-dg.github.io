@@ -1,0 +1,1044 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Visualisation Interactive de la Stack : Pile d'Assiettes & Table RAM — C Sécurisé II</title>
+  <meta name="description" content="Visualisation interactive de la Pile (Stack) en C : métaphore de la pile d'assiettes LIFO, tailles proportionnelles à sizeof(type), pointeur SP et table d'inspection RAM.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary: #003366;
+      --primary-light: #0055a5;
+      --secondary: #0077b6;
+      --secondary-light: #e0f2fe;
+      --accent: #e65100;
+      --accent-light: #ff833a;
+      --dark: #1e293b;
+      --light-bg: #f8fafc;
+      --card-bg: #ffffff;
+      --success: #16a34a;
+      --success-light: #dcfce7;
+      --warning: #d97706;
+      --warning-light: #fef3c7;
+      --danger: #dc2626;
+      --danger-light: #fee2e2;
+      --border: #e2e8f0;
+      --text: #1e293b;
+      --text-muted: #64748b;
+      --radius: 16px;
+      --shadow: 0 10px 25px -5px rgba(0, 51, 102, 0.08), 0 8px 10px -6px rgba(0, 51, 102, 0.04);
+      --transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Outfit', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: linear-gradient(135deg, #f1f5f9 0%, #e2eafc 100%);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      line-height: 1.55;
+    }
+
+    a { color: inherit; text-decoration: none; }
+
+    .container {
+      width: 100%;
+      max-width: 1320px;
+      margin: 0 auto;
+      padding: 0 20px;
+    }
+
+    /* Top Nav */
+    .top-nav {
+      padding: 20px 0;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .nav-left { display: flex; align-items: center; gap: 10px; }
+
+    .nav-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      color: var(--primary);
+      font-weight: 600;
+      font-size: 0.9rem;
+      padding: 8px 16px;
+      border-radius: 999px;
+      background: white;
+      border: 1px solid var(--border);
+      box-shadow: 0 2px 6px rgba(0,0,0,0.04);
+      transition: var(--transition);
+    }
+
+    .nav-btn:hover {
+      background: var(--secondary-light);
+      border-color: var(--secondary);
+      transform: translateX(-2px);
+    }
+
+    .nav-link-heap {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      color: var(--accent);
+      font-weight: 700;
+      font-size: 0.9rem;
+      padding: 8px 16px;
+      border-radius: 999px;
+      background: #fff4ed;
+      border: 1px solid #fed7aa;
+      transition: var(--transition);
+    }
+
+    .nav-link-heap:hover {
+      background: #ffedd5;
+      transform: translateY(-2px);
+    }
+
+    .badge-enssat {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--primary);
+      color: white;
+      padding: 6px 14px;
+      border-radius: 999px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+    }
+
+    .badge-enssat span { color: var(--accent-light); }
+
+    /* Header */
+    .header-box {
+      background: white;
+      border-radius: var(--radius);
+      padding: 26px 32px;
+      margin-bottom: 22px;
+      box-shadow: var(--shadow);
+      border: 1px solid var(--border);
+    }
+
+    .header-meta {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 10px;
+      flex-wrap: wrap;
+    }
+
+    .meta-tag {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.76rem;
+      font-weight: 700;
+      color: var(--secondary);
+      background: var(--secondary-light);
+      padding: 3px 10px;
+      border-radius: 6px;
+    }
+
+    .header-title {
+      font-size: 1.8rem;
+      font-weight: 800;
+      color: var(--primary);
+      margin-bottom: 6px;
+    }
+
+    .header-subtitle {
+      color: var(--text-muted);
+      font-size: 0.98rem;
+    }
+
+    /* Main Grid */
+    .dashboard-grid {
+      display: grid;
+      grid-template-columns: 370px 1fr;
+      gap: 22px;
+      margin-bottom: 32px;
+      align-items: start;
+    }
+
+    /* Left Panel */
+    .panel {
+      background: white;
+      border-radius: var(--radius);
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow);
+      padding: 22px;
+    }
+
+    .panel-title {
+      font-size: 1.15rem;
+      font-weight: 800;
+      color: var(--primary);
+      margin-bottom: 14px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .form-label {
+      display: block;
+      font-size: 0.84rem;
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: 6px;
+    }
+
+    .type-selector {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 8px;
+      margin-bottom: 14px;
+    }
+
+    .type-btn {
+      padding: 9px 10px;
+      border: 1.5px solid var(--border);
+      border-radius: 10px;
+      background: white;
+      cursor: pointer;
+      text-align: left;
+      transition: var(--transition);
+      display: flex;
+      flex-direction: column;
+    }
+
+    .type-btn:hover { border-color: var(--secondary); }
+    .type-btn.active {
+      border-color: var(--primary);
+      background: var(--secondary-light);
+      box-shadow: inset 0 0 0 1px var(--primary);
+    }
+
+    .type-btn-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .type-btn-name {
+      font-family: 'JetBrains Mono', monospace;
+      font-weight: 800;
+      font-size: 0.88rem;
+      color: var(--primary);
+    }
+
+    .type-btn-size {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.7rem;
+      font-weight: 700;
+      padding: 1px 6px;
+      border-radius: 4px;
+      background: rgba(0,51,102,0.08);
+    }
+
+    .type-btn-desc {
+      font-size: 0.74rem;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+
+    .input-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-bottom: 14px;
+    }
+
+    .form-input {
+      width: 100%;
+      padding: 8px 10px;
+      border: 1.5px solid var(--border);
+      border-radius: 8px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.85rem;
+    }
+
+    .btn-actions {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-bottom: 18px;
+    }
+
+    .btn {
+      font-family: inherit;
+      font-size: 0.9rem;
+      font-weight: 700;
+      padding: 11px 14px;
+      border-radius: 999px;
+      border: none;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      transition: var(--transition);
+    }
+
+    .btn-push { background: var(--primary); color: white; }
+    .btn-push:hover { background: var(--primary-light); transform: translateY(-2px); }
+
+    .btn-pop { background: var(--accent); color: white; }
+    .btn-pop:hover:not(:disabled) { background: var(--accent-light); transform: translateY(-2px); }
+    .btn-pop:disabled { background: #cbd5e1; cursor: not-allowed; }
+
+    /* Presets */
+    .presets-box {
+      border-top: 1px solid var(--border);
+      padding-top: 14px;
+    }
+
+    .presets-title {
+      font-size: 0.76rem;
+      font-weight: 700;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 8px;
+    }
+
+    .preset-btns {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .btn-preset {
+      padding: 8px 12px;
+      background: #f8fafc;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      font-size: 0.82rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      transition: var(--transition);
+    }
+
+    .btn-preset:hover {
+      background: white;
+      border-color: var(--secondary);
+      color: var(--primary);
+    }
+
+    /* Right Panel: Dual View (Physical Plates + RAM Inspector) */
+    .visualizer-card {
+      background: white;
+      border-radius: var(--radius);
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow);
+      padding: 22px;
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+    }
+
+    .visualizer-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding-bottom: 12px;
+      border-bottom: 1px solid var(--border);
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .stack-stats {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .stat-pill {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.78rem;
+      background: #f1f5f9;
+      padding: 4px 10px;
+      border-radius: 6px;
+      font-weight: 700;
+      color: var(--primary);
+    }
+
+    /* Dual Stage */
+    .dual-stage {
+      display: grid;
+      grid-template-columns: 1.15fr 1fr;
+      gap: 20px;
+      min-height: 430px;
+    }
+
+    /* Left Sub-column: Physical Dish Stack */
+    .dish-rack {
+      background: radial-gradient(circle at 50% 100%, #f8fafc 0%, #e2e8f0 100%);
+      border: 2px dashed #cbd5e1;
+      border-radius: 14px;
+      padding: 24px 16px 16px;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+      align-items: center;
+      position: relative;
+    }
+
+    .rack-caption {
+      position: absolute;
+      top: 12px;
+      left: 14px;
+      font-size: 0.78rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      color: var(--primary);
+    }
+
+    .plates-list {
+      width: 100%;
+      display: flex;
+      flex-direction: column-reverse;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .plate-item {
+      height: 46px;
+      border-radius: 999px;
+      padding: 0 18px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border: 3px solid white;
+      box-shadow: 0 6px 14px rgba(0, 51, 102, 0.14), inset 0 2px 4px rgba(255,255,255,0.8);
+      cursor: pointer;
+      position: relative;
+      transition: var(--transition);
+      animation: dropIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+      user-select: none;
+    }
+
+    @keyframes dropIn {
+      from { opacity: 0; transform: translateY(-45px) scale(0.92); }
+      to { opacity: 1; transform: translateY(0) scale(1); }
+    }
+
+    @keyframes shakeError {
+      0%, 100% { transform: translateX(0); }
+      25% { transform: translateX(-6px); }
+      75% { transform: translateX(6px); }
+    }
+
+    .plate-item.shake {
+      animation: shakeError 0.3s ease;
+    }
+
+    .plate-item.blocking-glow {
+      box-shadow: 0 0 0 3px var(--danger), 0 8px 16px rgba(220, 38, 38, 0.25);
+    }
+
+    /* Proportional widths */
+    .plate-char { width: 52%; min-width: 190px; background: linear-gradient(135deg, #a7f3d0, #34d399); border-color: #059669; color: #064e3b; }
+    .plate-short { width: 66%; min-width: 220px; background: linear-gradient(135deg, #bae6fd, #38bdf8); border-color: #0284c7; color: #0c4a6e; }
+    .plate-int { width: 80%; min-width: 250px; background: linear-gradient(135deg, #93c5fd, #3b82f6); border-color: #1d4ed8; color: #1e3a8a; }
+    .plate-double, .plate-pointer { width: 95%; min-width: 280px; background: linear-gradient(135deg, #fed7aa, #fb923c); border-color: #ea580c; color: #7c2d12; }
+
+    /* Embedded SP Tag on top plate */
+    .sp-badge {
+      position: absolute;
+      left: -10px;
+      top: -12px;
+      background: var(--accent);
+      color: white;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.68rem;
+      font-weight: 800;
+      padding: 2px 8px;
+      border-radius: 999px;
+      box-shadow: 0 3px 8px rgba(230, 81, 0, 0.35);
+      pointer-events: none;
+    }
+
+    .plate-var {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.86rem;
+      font-weight: 800;
+    }
+
+    .plate-meta {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.74rem;
+      background: rgba(255,255,255,0.65);
+      padding: 2px 7px;
+      border-radius: 6px;
+      font-weight: 700;
+    }
+
+    .stack-base {
+      width: 92%;
+      height: 18px;
+      background: linear-gradient(180deg, #475569, #1e293b);
+      border-radius: 6px;
+      margin-top: 8px;
+      color: white;
+      font-size: 0.68rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* Right Sub-column: RAM Address Table */
+    .ram-inspector {
+      background: #f8fafc;
+      border: 2px solid #cbd5e1;
+      border-radius: 14px;
+      padding: 14px;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .ram-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+
+    .ram-title {
+      font-size: 0.78rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      color: var(--primary);
+    }
+
+    .ram-rows {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      flex: 1;
+    }
+
+    .ram-row {
+      background: white;
+      border: 1.5px solid var(--border);
+      border-radius: 8px;
+      padding: 8px 10px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.75rem;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      transition: var(--transition);
+    }
+
+    .ram-row.top-row {
+      border-color: var(--accent);
+      background: #fff7ed;
+    }
+
+    .ram-row-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .ram-addr-range {
+      font-weight: 800;
+      color: var(--secondary);
+    }
+
+    .ram-frame-tag {
+      font-size: 0.66rem;
+      padding: 1px 6px;
+      border-radius: 4px;
+      background: #e2e8f0;
+      color: #334155;
+      font-weight: 700;
+    }
+
+    .ram-bytes-line {
+      display: flex;
+      gap: 4px;
+      flex-wrap: wrap;
+      margin-top: 2px;
+    }
+
+    .ram-byte-chip {
+      background: #f1f5f9;
+      border: 1px solid #cbd5e1;
+      padding: 1px 5px;
+      border-radius: 4px;
+      font-size: 0.68rem;
+      color: #334155;
+    }
+
+    /* Bottom Code & Diagnostic Bar */
+    .bottom-console {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      background: #1e293b;
+      color: #f8fafc;
+      border-radius: 12px;
+      padding: 16px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.8rem;
+    }
+
+    .console-title {
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      color: #94a3b8;
+      margin-bottom: 6px;
+      border-bottom: 1px solid #334155;
+      padding-bottom: 4px;
+    }
+
+    .diag-msg {
+      background: #0f172a;
+      border-left: 4px solid #38bdf8;
+      padding: 10px 12px;
+      border-radius: 6px;
+      font-family: 'Outfit', sans-serif;
+      font-size: 0.86rem;
+      line-height: 1.5;
+    }
+
+    .diag-msg.warn { border-left-color: #f59e0b; }
+    .diag-msg.danger { border-left-color: #ef4444; background: #2a1215; }
+
+    footer.site-footer {
+      margin-top: auto;
+      padding: 24px 0;
+      border-top: 1px solid var(--border);
+      background: rgba(255,255,255,0.6);
+      text-align: center;
+      font-size: 0.85rem;
+      color: var(--text-muted);
+    }
+
+    @media (max-width: 1024px) {
+      .dashboard-grid { grid-template-columns: 1fr; }
+      .dual-stage { grid-template-columns: 1fr; }
+      .bottom-console { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <!-- Top Nav -->
+    <nav class="top-nav">
+      <div class="nav-left">
+        <a href="../index.html" class="nav-btn">← Portail</a>
+        <a href="index.html" class="nav-btn">Module C Sécurisé II</a>
+      </div>
+      <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+        <a href="visualisation-heap.html" class="nav-link-heap">
+          📦 Voir la Visualisation du Tas (Heap) →
+        </a>
+        <div class="badge-enssat">ENSSAT <span>/</span> CUPGE2 CYBER</div>
+      </div>
+    </nav>
+
+    <!-- Header -->
+    <header class="header-box">
+      <div class="header-meta">
+        <span class="meta-tag">Structure LIFO (Last-In, First-Out)</span>
+        <span class="meta-tag">Adresses Décroissantes (%rsp)</span>
+        <span class="meta-tag">Gestion Automatique</span>
+      </div>
+      <h1 class="header-title">La Pile (Stack) : Pile d'Assiettes & Inspection RAM</h1>
+      <p class="header-subtitle">
+        Empilez (<code>push</code>) et dépilez (<code>pop</code>) des variables locales. Observez simultanément la <strong>métaphore physique des assiettes</strong> (diamètre proportionnel à <code>sizeof</code>) et la <strong>table d'adresses RAM</strong> où le pointeur de pile <code>SP</code> descend vers les adresses basses.
+      </p>
+    </header>
+
+    <!-- Main Dashboard -->
+    <main class="dashboard-grid">
+      <!-- Left Controls -->
+      <section class="panel">
+        <h2 class="panel-title">⚙️ Empiler une Variable</h2>
+
+        <label class="form-label">1. Type C (Diamètre de l'assiette) :</label>
+        <div class="type-selector">
+          <button class="type-btn active" data-type="int" data-size="4">
+            <div class="type-btn-top">
+              <span class="type-btn-name">int</span>
+              <span class="type-btn-size">4 o</span>
+            </div>
+            <span class="type-btn-desc">Assiette plate</span>
+          </button>
+          <button class="type-btn" data-type="char" data-size="1">
+            <div class="type-btn-top">
+              <span class="type-btn-name">char</span>
+              <span class="type-btn-size">1 o</span>
+            </div>
+            <span class="type-btn-desc">Petite soucoupe</span>
+          </button>
+          <button class="type-btn" data-type="short" data-size="2">
+            <div class="type-btn-top">
+              <span class="type-btn-name">short</span>
+              <span class="type-btn-size">2 o</span>
+            </div>
+            <span class="type-btn-desc">Assiette dessert</span>
+          </button>
+          <button class="type-btn" data-type="double" data-size="8">
+            <div class="type-btn-top">
+              <span class="type-btn-name">double</span>
+              <span class="type-btn-size">8 o</span>
+            </div>
+            <span class="type-btn-desc">Grand plat</span>
+          </button>
+        </div>
+
+        <div class="input-row">
+          <div>
+            <label class="form-label" for="var-name">Identifiant :</label>
+            <input type="text" id="var-name" class="form-input" value="score" maxlength="10">
+          </div>
+          <div>
+            <label class="form-label" for="var-val">Valeur :</label>
+            <input type="text" id="var-val" class="form-input" value="42" maxlength="12">
+          </div>
+        </div>
+
+        <div class="btn-actions">
+          <button class="btn btn-push" id="btn-push">📥 Push (Empiler)</button>
+          <button class="btn btn-pop" id="btn-pop">📤 Pop (Sommet)</button>
+        </div>
+
+        <div class="presets-box">
+          <div class="presets-title">Scénarios d'exécution :</div>
+          <div class="preset-btns">
+            <button class="btn-preset" id="preset-call">
+              <span>📞 Appeler <code>calculer(int x)</code></span>
+              <span style="color:var(--secondary);">Nouveau cadre</span>
+            </button>
+            <button class="btn-preset" id="preset-ret">
+              <span>↩️ Sortir de <code>calculer()</code> (<code>return</code>)</span>
+              <span style="color:var(--success);">Dépilage auto</span>
+            </button>
+            <button class="btn-preset" id="preset-overflow" style="color:var(--danger);">
+              <span>💥 Récursion infinie (Stack Overflow)</span>
+              <span>Crash</span>
+            </button>
+            <button class="btn-preset" id="preset-clear">
+              <span>🧹 Vider toute la pile</span>
+              <span>Reset</span>
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <!-- Right Dual Visualizer -->
+      <section class="visualizer-card">
+        <div class="visualizer-header">
+          <div style="font-weight:800; color:var(--primary); font-size:1.1rem;">
+            🍽️ Vue Synchronisée : Porte-Assiettes (LIFO) & Adresses RAM
+          </div>
+          <div class="stack-stats">
+            <span class="stat-pill" id="stat-frame">Cadre : main()</span>
+            <span class="stat-pill" id="stat-bytes">Occupé : 0 / 32 octets</span>
+            <span class="stat-pill" id="stat-sp" style="background:#fff4ed; color:var(--accent);">SP : 0x7FFD_F450</span>
+          </div>
+        </div>
+
+        <div class="dual-stage">
+          <!-- Physical Plates Stack -->
+          <div class="dish-rack">
+            <span class="rack-caption">1. Métaphore Physique (LIFO)</span>
+            <div class="plates-list" id="plates-list"></div>
+            <div class="stack-base">Base de la Pile : 0x7FFD_F450 (Adresse Haute)</div>
+          </div>
+
+          <!-- RAM Address Table -->
+          <div class="ram-inspector">
+            <div class="ram-header">
+              <span class="ram-title">2. Table d'Inspection RAM (Adresses Basses ↑)</span>
+              <span style="font-family:'JetBrains Mono',monospace; font-size:0.7rem; color:var(--text-muted);">Little-Endian</span>
+            </div>
+            <div class="ram-rows" id="ram-rows"></div>
+          </div>
+        </div>
+
+        <!-- Bottom Code & Explanation -->
+        <div class="bottom-console">
+          <div>
+            <div class="console-title">Code C Actif sur la Pile</div>
+            <pre id="code-view" style="white-space:pre-wrap; line-height:1.55;"></pre>
+          </div>
+          <div>
+            <div class="console-title">Explication Mémoire</div>
+            <div class="diag-msg" id="diag-msg">
+              Cliquez sur n'importe quelle assiette pour vérifier la règle <strong>LIFO</strong> (seule l'assiette au sommet pointée par <code>SP</code> peut être retirée).
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <footer class="site-footer">
+    <div class="container">
+      <p>C Sécurisé II — CUPGE2 Cyber • ENSSAT Lannion</p>
+    </div>
+  </footer>
+
+  <script>
+    const BASE_ADDR = 0x7ffdf450;
+    const MAX_PLATES = 7;
+    let stack = []; // { id, name, type, size, val, addr, frame, bytes }
+    let currentSP = BASE_ADDR;
+    let currentFrame = 'main()';
+    let selectedType = 'int';
+    let selectedSize = 4;
+    let counter = 1;
+
+    const platesListEl = document.getElementById('plates-list');
+    const ramRowsEl = document.getElementById('ram-rows');
+    const codeViewEl = document.getElementById('code-view');
+    const diagMsgEl = document.getElementById('diag-msg');
+    const inputName = document.getElementById('var-name');
+    const inputVal = document.getElementById('var-val');
+
+    document.querySelectorAll('.type-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.type-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        selectedType = btn.dataset.type;
+        selectedSize = parseInt(btn.dataset.size, 10);
+        suggestInputs();
+      });
+    });
+
+    function suggestInputs() {
+      counter++;
+      if (selectedType === 'int') { inputName.value = `n${counter}`; inputVal.value = `${counter * 10}`; }
+      if (selectedType === 'char') { inputName.value = `c${counter}`; inputVal.value = `'${String.fromCharCode(64 + (counter % 26 || 1))}'`; }
+      if (selectedType === 'short') { inputName.value = `s${counter}`; inputVal.value = `${counter * 100}`; }
+      if (selectedType === 'double') { inputName.value = `d${counter}`; inputVal.value = `3.14`; }
+    }
+
+    function toHex(n) {
+      return '0x' + n.toString(16).toUpperCase();
+    }
+
+    function computeBytes(valStr, type, size) {
+      let out = [];
+      if (type === 'char') {
+        let code = valStr.replace(/'/g, '').charCodeAt(0) || 65;
+        out.push(code.toString(16).toUpperCase().padStart(2, '0'));
+      } else if (type === 'int' || type === 'short') {
+        let num = parseInt(valStr, 10);
+        if (isNaN(num)) num = 0;
+        for (let i = 0; i < size; i++) {
+          out.push(((num >> (i * 8)) & 0xFF).toString(16).toUpperCase().padStart(2, '0'));
+        }
+      } else {
+        out = ['1F', '85', 'EB', '51', 'B8', '1E', '09', '40'];
+      }
+      return out;
+    }
+
+    function pushVar(type, size, name, val, frameName = currentFrame) {
+      if (stack.length >= MAX_PLATES) {
+        setDiag('danger', `<strong>💥 STACK OVERFLOW !</strong> La capacité maximale de la pile est dépassée (trop d'appels ou de variables locales empilées). Le programme plante avec un <code>SIGSEGV</code>.`);
+        return false;
+      }
+
+      currentSP -= size;
+      const item = {
+        id: Date.now() + Math.random(),
+        name: name || `v${stack.length + 1}`,
+        type,
+        size,
+        val: val || '0',
+        addr: currentSP,
+        frame: frameName,
+        bytes: computeBytes(val || '0', type, size)
+      };
+
+      stack.push(item);
+      renderStack();
+      setDiag('info', `<strong>Push réussi :</strong> Le pointeur de pile <code>SP</code> est descendu de <strong>${size} octet(s)</strong> jusqu'à <code>${toHex(item.addr)}</code> pour loger <code>${item.type} ${item.name} = ${item.val}</code>.`);
+      suggestInputs();
+      return true;
+    }
+
+    function popVar() {
+      if (stack.length === 0) return;
+      const popped = stack.pop();
+      currentSP += popped.size;
+      if (stack.length > 0) {
+        currentFrame = stack[stack.length - 1].frame;
+      } else {
+        currentFrame = 'main()';
+      }
+      renderStack();
+      setDiag('info', `<strong>Pop réussi (LIFO) :</strong> L'assiette du sommet <code>${popped.name}</code> a été retirée. Le registre <code>SP</code> remonte de ${popped.size} octet(s) à <code>${toHex(currentSP)}</code>.`);
+    }
+
+    function handlePlateClick(index) {
+      const topIndex = stack.length - 1;
+      const clicked = stack[index];
+
+      if (index === topIndex) {
+        popVar();
+      } else {
+        const countAbove = topIndex - index;
+        setDiag('warn', `<strong>🛑 Règle LIFO (Last-In, First-Out) :</strong> Impossible de retirer <code>${clicked.name}</code> directement ! Elle est coincée sous <strong>${countAbove} assiette(s)</strong> plus récentes (surlignées en rouge). Vous devez d'abord dépiler le sommet.`);
+
+        // Shake clicked plate and highlight blocking plates above it
+        const domPlate = document.getElementById(`plate-${clicked.id}`);
+        if (domPlate) {
+          domPlate.classList.remove('shake');
+          void domPlate.offsetWidth;
+          domPlate.classList.add('shake');
+        }
+
+        for (let i = index + 1; i <= topIndex; i++) {
+          const aboveDom = document.getElementById(`plate-${stack[i].id}`);
+          if (aboveDom) {
+            aboveDom.classList.add('blocking-glow');
+            setTimeout(() => aboveDom.classList.remove('blocking-glow'), 900);
+          }
+        }
+      }
+    }
+
+    function setDiag(level, html) {
+      diagMsgEl.className = `diag-msg ${level === 'warn' ? 'warn' : level === 'danger' ? 'danger' : ''}`;
+      diagMsgEl.innerHTML = html;
+    }
+
+    function renderStack() {
+      platesListEl.innerHTML = '';
+      ramRowsEl.innerHTML = '';
+
+      document.getElementById('btn-pop').disabled = (stack.length === 0);
+      const totalBytes = stack.reduce((acc, i) => acc + i.size, 0);
+      document.getElementById('stat-frame').textContent = `Cadre : ${currentFrame}`;
+      document.getElementById('stat-bytes').textContent = `Occupé : ${totalBytes} octets`;
+      document.getElementById('stat-sp').textContent = `SP : ${toHex(currentSP)}`;
+
+      if (stack.length === 0) {
+        platesListEl.innerHTML = `<div style="padding:50px 20px; text-align:center; color:var(--text-muted); font-size:0.86rem;">La pile est vide.<br>Cliquez sur <strong>Push (Empiler)</strong>.</div>`;
+        ramRowsEl.innerHTML = `<div style="padding:50px 20px; text-align:center; color:var(--text-muted); font-size:0.84rem;">Aucune variable allouée en RAM.</div>`;
+        codeViewEl.textContent = `int main() {\n    // SP = ${toHex(BASE_ADDR)}\n}`;
+        return;
+      }
+
+      // Render Physical Plates
+      stack.forEach((item, idx) => {
+        const isTop = (idx === stack.length - 1);
+        const p = document.createElement('div');
+        p.id = `plate-${item.id}`;
+        p.className = `plate-item plate-${item.type}`;
+        p.title = isTop ? "Cliquer pour dépiler (Pop)" : "Bloquée par les assiettes au-dessus (LIFO)";
+
+        p.innerHTML = `
+          ${isTop ? '<span class="sp-badge">SP → Sommet</span>' : ''}
+          <span class="plate-var">${item.type} ${item.name} = ${item.val}</span>
+          <span class="plate-meta">${toHex(item.addr)} (${item.size}o)</span>
+        `;
+        p.addEventListener('click', () => handlePlateClick(idx));
+        platesListEl.appendChild(p);
+      });
+
+      // Render RAM Inspection Table (Top of stack first = lowest address at top)
+      [...stack].reverse().forEach((item, revIdx) => {
+        const isTop = (revIdx === 0);
+        const row = document.createElement('div');
+        row.className = `ram-row ${isTop ? 'top-row' : ''}`;
+
+        let chips = item.bytes.map((b, i) => `<span class="ram-byte-chip">+${i}: 0x${b}</span>`).join('');
+        row.innerHTML = `
+          <div class="ram-row-head">
+            <span class="ram-addr-range">${toHex(item.addr)} .. ${toHex(item.addr + item.size - 1)}</span>
+            <span class="ram-frame-tag">${item.frame}</span>
+          </div>
+          <div style="display:flex; justify-content:space-between; color:var(--text);">
+            <span><strong>&${item.name}</strong> (${item.type}, ${item.size}o)</span>
+            <span>val = <strong>${item.val}</strong></span>
+          </div>
+          <div class="ram-bytes-line">${chips}</div>
+        `;
+        ramRowsEl.appendChild(row);
+      });
+
+      // Update C Code View
+      let lines = [`void ${currentFrame} {`];
+      stack.forEach(item => {
+        lines.push(`    ${item.type} ${item.name} = ${item.val}; // @ ${toHex(item.addr)} [${item.frame}]`);
+      });
+      lines.push(`}`);
+      codeViewEl.textContent = lines.join('\n');
+    }
+
+    // Listeners
+    document.getElementById('btn-push').addEventListener('click', () => {
+      pushVar(selectedType, selectedSize, inputName.value.trim(), inputVal.value.trim(), currentFrame);
+    });
+
+    document.getElementById('btn-pop').addEventListener('click', popVar);
+
+    document.getElementById('preset-call').addEventListener('click', () => {
+      currentFrame = 'calculer()';
+      pushVar('int', 4, 'param_x', '10', 'calculer()');
+      setTimeout(() => pushVar('short', 2, 'tmp', '5', 'calculer()'), 180);
+      setDiag('info', `<strong>Appel de <code>calculer()</code> :</strong> Un nouveau cadre d'activation (<em>Stack Frame</em>) est empilé par-dessus <code>main()</code> avec ses propres variables locales.`);
+    });
+
+    document.getElementById('preset-ret').addEventListener('click', () => {
+      const calcItems = stack.filter(i => i.frame === 'calculer()');
+      if (calcItems.length === 0) {
+        popVar();
+        return;
+      }
+      stack = stack.filter(i => i.frame !== 'calculer()');
+      currentSP = stack.length > 0 ? stack[stack.length - 1].addr : BASE_ADDR;
+      currentFrame = 'main()';
+      renderStack();
+      setDiag('info', `<strong>Sortie de <code>calculer()</code> (<code>return</code>) :</strong> Toutes les assiettes du cadre <code>calculer()</code> sont dépilées instantanément ! C'est pourquoi une variable locale ne survit jamais à sa fonction.`);
+    });
+
+    document.getElementById('preset-overflow').addEventListener('click', () => {
+      let step = 1;
+      const timer = setInterval(() => {
+        const ok = pushVar('int', 4, `rec_${step}`, `${step}`, `rec(${step})`);
+        step++;
+        if (!ok) clearInterval(timer);
+      }, 160);
+    });
+
+    document.getElementById('preset-clear').addEventListener('click', () => {
+      stack = [];
+      currentSP = BASE_ADDR;
+      currentFrame = 'main()';
+      renderStack();
+      setDiag('info', 'Pile entièrement vidée. Le registre SP est revenu à la base <code>0x7FFD_F450</code>.');
+    });
+
+    // Initial state
+    pushVar('int', 4, 'score', '42', 'main()');
+    pushVar('char', 1, 'grade', "'A'", 'main()');
+  </script>
+</body>
+</html>
