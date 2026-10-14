@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Organisation et Déroulement Mémoire en C — Fiche de Révision C Sécurisé II</title>
+  <meta name="description" content="Décomposition pas à pas du cycle d'allocation dynamique en C : état de la pile et du tas lors de malloc, écriture par arithmétique de pointeurs, libération free et neutralisation NULL.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="resumes.css">
+  <style>
+    .step-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: var(--secondary);
+      color: white;
+      padding: 4px 12px;
+      border-radius: 999px;
+      font-size: 0.82rem;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+    .step-badge.warning { background: var(--warning); }
+    .step-badge.danger { background: var(--danger); }
+    .step-badge.success { background: var(--success); }
+    .state-progression {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+      gap: 12px;
+      margin: 18px 0;
+    }
+    .state-card {
+      background: white;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 14px;
+      text-align: center;
+    }
+    .state-card strong {
+      display: block;
+      margin-bottom: 4px;
+      font-size: 0.92rem;
+    }
+    .state-tag {
+      display: inline-block;
+      padding: 3px 8px;
+      border-radius: 4px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.78rem;
+      font-weight: 600;
+      margin-top: 6px;
+    }
+    .state-uninit { background: #f1f5f9; color: #475569; }
+    .state-valid { background: #dcfce7; color: #15803d; }
+    .state-dangling { background: #fee2e2; color: #b91c1c; }
+    .state-null { background: #e0f2fe; color: #0369a1; }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <!-- Top Navigation Bar -->
+    <header class="top-nav">
+      <a href="../index.html" class="nav-back">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="19" y1="12" x2="5" y2="12"></line>
+          <polyline points="12 19 5 12 12 5"></polyline>
+        </svg>
+        Retour au Module C Sécurisé II
+      </a>
+      <span class="badge-enssat">ENSSAT <span>CUPGE2 CYBER</span></span>
+    </header>
+
+    <!-- Fiches Quick Switcher -->
+    <div class="fiches-nav-wrapper">
+      <nav class="fiches-nav" aria-label="Navigation entre fiches">
+        <a href="prog_defensive.html" class="fiche-nav-item">🛡️ Prog. Défensive</a>
+        <a href="arithmétique_pointeurs.html" class="fiche-nav-item">📐 Arithmétique Ptrs</a>
+        <a href="pile_vs_stack.html" class="fiche-nav-item">📚 Pile vs Tas</a>
+        <a href="gestion_memoire.html" class="fiche-nav-item">📦 Gestion Mémoire</a>
+        <a href="memoire.html" class="fiche-nav-item active">💾 Organisation Mémoire</a>
+        <a href="fonctions.html" class="fiche-nav-item">⚙️ Fonctions Clés</a>
+      </nav>
+    </div>
+
+    <!-- Hero Header -->
+    <div class="hero">
+      <div class="hero-meta">
+        <span class="meta-tag">C Sécurisé II</span>
+        <span class="meta-tag accent">Fiche #5</span>
+        <span class="meta-tag">Traçage Visuel Mémoire</span>
+      </div>
+      <h1 class="hero-title">💾 Organisation &amp; Cycle Mémoire en C</h1>
+      <p class="hero-desc">
+        Décomposition pas à pas de l'allocation d'un buffer dynamique, de son remplissage via l'arithmétique des pointeurs, de sa libération et de la sécurisation du pointeur contre les accès suspendus.
+      </p>
+    </div>
+
+    <!-- Code Référence -->
+    <section class="card">
+      <h2 class="card-title-lg">💻 Le Programme C d'Exemple</h2>
+      <p>
+        Nous étudions l'évolution de la mémoire tout au long de ce fragment de code canonique :
+      </p>
+
+      <div class="code-container">
+        <div class="code-header">
+          <div class="code-header-dots"><span></span><span></span><span></span></div>
+          <span>tracage_memoire.c</span>
+        </div>
+        <pre><code class="language-c"><span class="tok-kw">const</span> <span class="tok-type">int</span> array_size = <span class="tok-num">5</span>;
+<span class="tok-type">int</span> *array = <span class="tok-num">NULL</span>;
+
+<span class="tok-comm">// Étape 1 : Réservation de 20 octets sur le Heap</span>
+array = (<span class="tok-type">int</span> *) <span class="tok-fn">malloc</span>(array_size * <span class="tok-kw">sizeof</span>(<span class="tok-type">int</span>));
+
+<span class="tok-comm">// Étape 2 : Initialisation par arithmétique des pointeurs</span>
+<span class="tok-kw">for</span> (<span class="tok-type">int</span> i = <span class="tok-num">0</span>; i &lt; array_size; ++i) {
+    *(array + i) = i * i;
+}
+
+<span class="tok-comm">// Étape 3 : Restitution au système</span>
+<span class="tok-fn">free</span>(array);
+
+<span class="tok-comm">// Étape 4 : Neutralisation du pointeur suspendu</span>
+array = <span class="tok-num">NULL</span>;</code></pre>
+      </div>
+    </section>
+
+    <!-- Étape 1 : malloc -->
+    <section class="card">
+      <span class="step-badge">ÉTAPE 1</span>
+      <h2 class="card-title-lg">📦 Allocation Initiale avec <code>malloc</code></h2>
+      <p>
+        L'appel à <code>malloc(5 * sizeof(int))</code> demande au système 20 octets consécutifs. La fonction renvoie l'adresse de départ du bloc alloué (par exemple <code>@0x55a0</code>).
+      </p>
+      <ul>
+        <li>La variable pointeur <code>array</code> est située sur la <strong>Pile (Stack)</strong> à l'adresse locale <code>@0x7ffc...</code>.</li>
+        <li>Elle contient l'adresse <code>@0x55a0</code> qui pointe vers le bloc réservé sur le <strong>Tas (Heap)</strong>.</li>
+        <li><strong>Important :</strong> <code>malloc</code> n'initialise pas la mémoire ! Les 5 entiers contiennent des valeurs arbitraires imprévisibles (<em>garbage values</em>).</li>
+      </ul>
+
+      <div class="memory-diagram">
+        <div class="memory-area">
+          <div class="memory-box stack-box">
+            <h4>📦 Pile (Stack)</h4>
+            <div class="pointer-card">
+              <div class="pointer-card-header">
+                <span class="pointer-name">array</span>
+                <span class="pointer-addr">@0x7ffc80</span>
+              </div>
+              <div>Valeur stockée :</div>
+              <div class="pointer-val">@0x55a0</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="diagram-arrow">➔</div>
+
+        <div class="memory-area" style="flex: 2;">
+          <div class="memory-box heap-box">
+            <h4>💾 Tas (Heap) — Bloc non initialisé</h4>
+            <div class="array-vis">
+              <div class="array-cell">
+                <div class="cell-index">[0]</div>
+                <div class="cell-value">?</div>
+                <div class="cell-addr">@0x55a0</div>
+              </div>
+              <div class="array-cell">
+                <div class="cell-index">[1]</div>
+                <div class="cell-value">?</div>
+                <div class="cell-addr">@0x55a4</div>
+              </div>
+              <div class="array-cell">
+                <div class="cell-index">[2]</div>
+                <div class="cell-value">?</div>
+                <div class="cell-addr">@0x55a8</div>
+              </div>
+              <div class="array-cell">
+                <div class="cell-index">[3]</div>
+                <div class="cell-value">?</div>
+                <div class="cell-addr">@0x55ac</div>
+              </div>
+              <div class="array-cell">
+                <div class="cell-index">[4]</div>
+                <div class="cell-value">?</div>
+                <div class="cell-addr">@0x55b0</div>
+              </div>
+            </div>
+            <p style="font-size: 0.85rem; color: #7c2d12; margin-top: 8px;">
+              Bloc de 20 octets réservé. Contenu indéterminé.
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Étape 2 : Boucle for -->
+    <section class="card">
+      <span class="step-badge">ÉTAPE 2</span>
+      <h2 class="card-title-lg">⚙️ Écriture et Remplissage : <code>*(array + i) = i * i</code></h2>
+      <p>
+        À chaque itération, l'expression <code>*(array + i)</code> déplace le curseur mémoire de <code>i × 4</code> octets puis déréférence pour affecter le carré de l'indice :
+      </p>
+
+      <div style="margin: 20px 0;">
+        <p><strong>Itération i = 0 :</strong> Écriture de <code>0</code> à l'adresse <code>@0x55a0</code></p>
+        <div class="array-vis">
+          <div class="array-cell highlight"><div class="cell-index">[0]</div><div class="cell-value">0</div><div class="cell-addr">@0x55a0</div></div>
+          <div class="array-cell"><div class="cell-index">[1]</div><div class="cell-value">?</div><div class="cell-addr">@0x55a4</div></div>
+          <div class="array-cell"><div class="cell-index">[2]</div><div class="cell-value">?</div><div class="cell-addr">@0x55a8</div></div>
+          <div class="array-cell"><div class="cell-index">[3]</div><div class="cell-value">?</div><div class="cell-addr">@0x55ac</div></div>
+          <div class="array-cell"><div class="cell-index">[4]</div><div class="cell-value">?</div><div class="cell-addr">@0x55b0</div></div>
+        </div>
+
+        <p style="margin-top: 14px;"><strong>Itération i = 2 :</strong> Écriture de <code>4</code> à l'adresse <code>@0x55a8</code></p>
+        <div class="array-vis">
+          <div class="array-cell"><div class="cell-index">[0]</div><div class="cell-value">0</div><div class="cell-addr">@0x55a0</div></div>
+          <div class="array-cell"><div class="cell-index">[1]</div><div class="cell-value">1</div><div class="cell-addr">@0x55a4</div></div>
+          <div class="array-cell highlight"><div class="cell-index">[2]</div><div class="cell-value">4</div><div class="cell-addr">@0x55a8</div></div>
+          <div class="array-cell"><div class="cell-index">[3]</div><div class="cell-value">?</div><div class="cell-addr">@0x55ac</div></div>
+          <div class="array-cell"><div class="cell-index">[4]</div><div class="cell-value">?</div><div class="cell-addr">@0x55b0</div></div>
+        </div>
+
+        <p style="margin-top: 14px;"><strong>État final après la boucle :</strong> Toutes les cases sont renseignées</p>
+        <div class="array-vis">
+          <div class="array-cell"><div class="cell-index">[0]</div><div class="cell-value">0</div><div class="cell-addr">@0x55a0</div></div>
+          <div class="array-cell"><div class="cell-index">[1]</div><div class="cell-value">1</div><div class="cell-addr">@0x55a4</div></div>
+          <div class="array-cell"><div class="cell-index">[2]</div><div class="cell-value">4</div><div class="cell-addr">@0x55a8</div></div>
+          <div class="array-cell"><div class="cell-index">[3]</div><div class="cell-value">9</div><div class="cell-addr">@0x55ac</div></div>
+          <div class="array-cell"><div class="cell-index">[4]</div><div class="cell-value">16</div><div class="cell-addr">@0x55b0</div></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Étape 3 : free -->
+    <section class="card">
+      <span class="step-badge danger">ÉTAPE 3</span>
+      <h2 class="card-title-lg">⚠️ Libération avec <code>free(array)</code> et Danger Suspendu</h2>
+      <p>
+        L'appel à <code>free(array)</code> informe le gestionnaire de mémoire que le bloc <code>@0x55a0</code> est désormais disponible pour de futures allocations.
+      </p>
+
+      <div class="callout callout-danger">
+        <div class="callout-title">🚨 Le Piège Mortel du Pointeur Suspendu (Dangling Pointer)</div>
+        <code>free()</code> libère la zone du Tas mais <strong>ne modifie absolument pas la variable <code>array</code></strong> ! Le pointeur <code>array</code> contient toujours l'adresse <code>@0x55a0</code>, qui n'est plus valide. Tenter de lire ou d'écrire dedans provoque une faille critique de type <em>Use-After-Free (UAF)</em>.
+      </div>
+
+      <div class="memory-diagram">
+        <div class="memory-area">
+          <div class="memory-box stack-box">
+            <h4>📦 Pile (Stack)</h4>
+            <div class="pointer-card" style="border-color: #fca5a5;">
+              <div class="pointer-card-header">
+                <span class="pointer-name">array</span>
+                <span class="pointer-addr">@0x7ffc80</span>
+              </div>
+              <div>Contient toujours :</div>
+              <div class="pointer-val" style="color: #dc2626;">@0x55a0 ⚠️ (DANGER)</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="diagram-arrow" style="color: #dc2626;">✖</div>
+
+        <div class="memory-area" style="flex: 2;">
+          <div class="memory-box" style="background: #f1f5f9; border: 2px dashed #94a3b8;">
+            <h4 style="color: #64748b;">🗑️ Tas (Heap) — Bloc Libéré</h4>
+            <div class="array-vis">
+              <div class="array-cell freed"><div class="cell-value">—</div></div>
+              <div class="array-cell freed"><div class="cell-value">—</div></div>
+              <div class="array-cell freed"><div class="cell-value">—</div></div>
+              <div class="array-cell freed"><div class="cell-value">—</div></div>
+              <div class="array-cell freed"><div class="cell-value">—</div></div>
+            </div>
+            <p style="font-size: 0.85rem; color: #64748b; margin-top: 8px;">
+              Mémoire restituée à l'allocateur. Accès formellement prohibé.
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Étape 4 : NULL -->
+    <section class="card">
+      <span class="step-badge success">ÉTAPE 4</span>
+      <h2 class="card-title-lg">🛡️ La Neutralisation Défensive : <code>array = NULL;</code></h2>
+      <p>
+        Pour neutraliser définitivement le pointeur suspendu, on assigne la constante <code>NULL</code> (adresse 0) à la variable.
+      </p>
+
+      <div class="memory-diagram">
+        <div class="memory-area">
+          <div class="memory-box stack-box">
+            <h4>📦 Pile (Stack)</h4>
+            <div class="pointer-card" style="border-color: #86efac;">
+              <div class="pointer-card-header">
+                <span class="pointer-name">array</span>
+                <span class="pointer-addr">@0x7ffc80</span>
+              </div>
+              <div>Valeur sécurisée :</div>
+              <div class="pointer-val" style="color: #16a34a;">NULL (0x0) ✅</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <p>
+        Si un bout de code tente ultérieurement de déréférencer <code>*array</code>, le noyau Linux lèvera instantanément une faute de page (<em>SIGSEGV</em> propre et immédiat), empêchant toute exploitation silencieuse ou corruption mémoire pernicieuse.
+      </p>
+    </section>
+
+    <!-- Cycle des états -->
+    <section class="card">
+      <h2 class="card-title-lg">🔄 Machine à États du Pointeur Sécurisé</h2>
+      <div class="state-progression">
+        <div class="state-card">
+          <strong>1. Déclaration</strong>
+          <small>int *ptr = NULL;</small>
+          <div><span class="state-tag state-null">NULL (Sûr)</span></div>
+        </div>
+        <div class="state-card">
+          <strong>2. Après malloc</strong>
+          <small>ptr = malloc(...);</small>
+          <div><span class="state-tag state-valid">VALIDE</span></div>
+        </div>
+        <div class="state-card">
+          <strong>3. Après free</strong>
+          <small>free(ptr);</small>
+          <div><span class="state-tag state-dangling">SUSPENDU ⚠️</span></div>
+        </div>
+        <div class="state-card">
+          <strong>4. Après reset</strong>
+          <small>ptr = NULL;</small>
+          <div><span class="state-tag state-null">DÉSARMÉ ✅</span></div>
+        </div>
+      </div>
+    </section>
+
+  </div>
+
+  <!-- Standard Site Footer -->
+  <footer class="site-footer">
+    <div class="container">
+      <p><strong>C Sécurisé II</strong> — CUPGE2 Cyber • ENSSAT Lannion</p>
+      <p style="margin-top: 6px; font-size: 0.82rem; color: #94a3b8;">
+        Fiche de révision notionale • Le pouvoir, les pièges des pointeurs et la programmation défensive en C.
+      </p>
+    </div>
+  </footer>
+
+</body>
+</html>

@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Programmation Défensive en C — Fiche de Révision C Sécurisé II</title>
+  <meta name="description" content="Fiche synthétique sur les principes de la programmation défensive en C : anticipation des erreurs, validation des entrées, gestion mémoire rigoureuse et assertions.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="resumes.css">
+  <style>
+    .pillars-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 18px;
+      margin: 20px 0;
+    }
+    .pillar-card {
+      background: #f8fafc;
+      border: 1px solid var(--border);
+      border-top: 4px solid var(--primary);
+      border-radius: var(--radius-sm);
+      padding: 20px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.03);
+      transition: var(--transition);
+    }
+    .pillar-card:hover {
+      transform: translateY(-3px);
+      box-shadow: var(--shadow);
+      border-top-color: var(--secondary);
+    }
+    .pillar-card h4 {
+      color: var(--primary);
+      font-size: 1.1rem;
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .pipeline-diagram {
+      display: flex;
+      align-items: center;
+      justify-content: space-around;
+      gap: 16px;
+      padding: 22px;
+      background: #f8fafc;
+      border: 1px dashed var(--border-strong);
+      border-radius: var(--radius-sm);
+      margin: 20px 0;
+      flex-wrap: wrap;
+    }
+    .pipe-step {
+      text-align: center;
+      padding: 12px 18px;
+      border-radius: 8px;
+      font-weight: 600;
+      font-size: 0.92rem;
+    }
+    .pipe-danger { background: #fee2e2; color: #991b1b; border: 1px solid #fca5a5; }
+    .pipe-shield { background: #e0f2fe; color: #075985; border: 1px solid #7dd3fc; font-size: 1.2rem; }
+    .pipe-safe { background: #dcfce7; color: #166534; border: 1px solid #86efac; }
+    .tools-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 16px;
+      margin: 18px 0;
+    }
+    .tool-card {
+      background: white;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 16px;
+      border-left: 4px solid var(--secondary);
+    }
+    .tool-card strong {
+      display: block;
+      color: var(--primary);
+      margin-bottom: 4px;
+      font-size: 0.98rem;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <!-- Top Navigation Bar -->
+    <header class="top-nav">
+      <a href="../index.html" class="nav-back">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="19" y1="12" x2="5" y2="12"></line>
+          <polyline points="12 19 5 12 12 5"></polyline>
+        </svg>
+        Retour au Module C Sécurisé II
+      </a>
+      <span class="badge-enssat">ENSSAT <span>CUPGE2 CYBER</span></span>
+    </header>
+
+    <!-- Fiches Quick Switcher -->
+    <div class="fiches-nav-wrapper">
+      <nav class="fiches-nav" aria-label="Navigation entre fiches">
+        <a href="prog_defensive.html" class="fiche-nav-item active">🛡️ Prog. Défensive</a>
+        <a href="arithmétique_pointeurs.html" class="fiche-nav-item">📐 Arithmétique Ptrs</a>
+        <a href="pile_vs_stack.html" class="fiche-nav-item">📚 Pile vs Tas</a>
+        <a href="gestion_memoire.html" class="fiche-nav-item">📦 Gestion Mémoire</a>
+        <a href="memoire.html" class="fiche-nav-item">💾 Organisation Mémoire</a>
+        <a href="fonctions.html" class="fiche-nav-item">⚙️ Fonctions Clés</a>
+      </nav>
+    </div>
+
+    <!-- Hero Header -->
+    <div class="hero">
+      <div class="hero-meta">
+        <span class="meta-tag">C Sécurisé II</span>
+        <span class="meta-tag accent">Fiche #1</span>
+        <span class="meta-tag">Sécurité & Robustesse</span>
+      </div>
+      <h1 class="hero-title">🛡️ Initiation à la Programmation Défensive</h1>
+      <p class="hero-desc">
+        La programmation défensive est une méthodologie de conception où chaque composant logiciel anticipe activement les pannes, les entrées corrompues et les utilisations hostiles. En C, c'est le premier rempart contre les vulnérabilités critiques.
+      </p>
+    </div>
+
+    <!-- Section 1 : Philosophie -->
+    <section class="card">
+      <h2 class="card-title-lg">🧠 La Philosophie de la Méfiance Constructive</h2>
+      <p>
+        Contrairement à des environnements munis d'un ramasse-miettes (<em>Garbage Collector</em>) et de mécanismes d'exceptions managés, le langage C accorde un accès direct à la mémoire brute. La moindre erreur d'hypothèse peut entraîner un crash brutal (<em>Segmentation Fault</em>) ou, pire, une porte d'entrée pour une cyberattaque.
+      </p>
+      <p>
+        Adopter un état d'esprit défensif, c'est partir du principe qu'<strong>aucune donnée extérieure n'est digne de confiance</strong> et qu'aucun appel système n'est garanti de réussir. En investissant cet effort en amont, vous réduisez considérablement le temps passé en débogage et éliminez les failles avant qu'elles ne soient compilées.
+      </p>
+
+      <div class="callout callout-info">
+        <div class="callout-title">💡 La règle d'or de la programmation défensive</div>
+        <em>"Assume nothing, verify everything, fail safely."</em> (Ne présumez de rien, vérifiez tout, échouez de manière sécurisée).
+      </div>
+    </section>
+
+    <!-- Section 2 : Les Trois Piliers -->
+    <section class="card">
+      <h2 class="card-title-lg">🏛️ Les Trois Piliers Fondamentaux</h2>
+      <p>Cette approche repose sur trois règles directrices à respecter lors de la conception de vos fonctions :</p>
+
+      <div class="pillars-grid">
+        <div class="pillar-card">
+          <h4><span>1️⃣</span> Ne rien présumer</h4>
+          <p>
+            L'entrée utilisateur, le contenu d'un fichier ou le retour d'un socket réseau sont hors de votre contrôle. Traitez-les comme imprévisibles, voire potentiellement malveillants.
+          </p>
+        </div>
+
+        <div class="pillar-card">
+          <h4><span>2️⃣</span> Utiliser des standards</h4>
+          <p>
+            Adoptez des conventions de nommage strictes, des types à taille explicite (<code>stdint.h</code>), et bannissez les fonctions dépréciées et dangereuses de la libc.
+          </p>
+        </div>
+
+        <div class="pillar-card">
+          <h4><span>3️⃣</span> Garder le code simple</h4>
+          <p>
+            <em>"Complexity breeds bugs."</em> Plus une fonction tente d'en faire, plus les cas limites échappent à l'analyse. Une logique limpide est facile à auditer et à tester.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Section 3 : Techniques pratiques -->
+    <section class="card">
+      <h2 class="card-title-lg">🛠️ Techniques Défensives Essentielles</h2>
+
+      <!-- 1. Validation -->
+      <h3 class="card-title-md">1. Validation et Assainissement des Entrées (Input Sanitization)</h3>
+      <p>
+        Validez systématiquement les données aux frontières du programme avant tout traitement. La validation porte sur trois critères : <strong>le type</strong>, <strong>la longueur / taille</strong> et <strong>la plage de valeurs admissibles</strong>.
+      </p>
+
+      <div class="pipeline-diagram">
+        <div class="pipe-step pipe-danger">
+          ⚠️ Donnée externe brute<br>
+          <small>Ex: <code>age = -42</code> ou <code>len &gt; BUFSIZ</code></small>
+        </div>
+        <div class="diagram-arrow">➔</div>
+        <div class="pipe-step pipe-shield">
+          🛡️ Sas de Validation<br>
+          <small>Vérification stricte des bornes</small>
+        </div>
+        <div class="diagram-arrow">➔</div>
+        <div class="pipe-step pipe-safe">
+          ✅ Traitement Sécurisé<br>
+          <small>Donnée garantie conforme</small>
+        </div>
+      </div>
+
+      <div class="code-container">
+        <div class="code-header">
+          <div class="code-header-dots"><span></span><span></span><span></span></div>
+          <span>validation_bornes.c</span>
+        </div>
+        <pre><code class="language-c"><span class="tok-comm">// Ne jamais faire confiance aveuglément aux paramètres reçus</span>
+<span class="tok-type">int</span> <span class="tok-fn">enregistrer_age</span>(<span class="tok-type">int</span> user_age) {
+    <span class="tok-kw">if</span> (user_age &lt; <span class="tok-num">0</span> || user_age &gt; <span class="tok-num">125</span>) {
+        <span class="tok-comm">// Rejet immédiat : la valeur viole le domaine de validité</span>
+        <span class="tok-kw">return</span> -<span class="tok-num">1</span>; 
+    }
+
+    <span class="tok-comm">// Ici, user_age est certifié dans l'intervalle [0, 125]</span>
+    <span class="tok-fn">stocker_profil</span>(user_age);
+    <span class="tok-kw">return</span> <span class="tok-num">0</span>; <span class="tok-comm">// Succès</span>
+}</code></pre>
+      </div>
+
+      <!-- 2. Gestion mémoire -->
+      <h3 class="card-title-md">2. Gestion Rigoureuse et Défensive de la Mémoire</h3>
+      <p>
+        Les vulnérabilités les plus critiques en C (CWE-476 Déréférencement NULL, CWE-416 Use-After-Free, CWE-415 Double Free) proviennent d'une gestion négligente du Heap.
+      </p>
+
+      <div class="code-container">
+        <div class="code-header">
+          <div class="code-header-dots"><span></span><span></span><span></span></div>
+          <span>gestion_memoire_defensive.c</span>
+        </div>
+        <pre><code class="language-c"><span class="tok-type">int</span> *ptr = (<span class="tok-type">int</span> *) <span class="tok-fn">malloc</span>(<span class="tok-num">10</span> * <span class="tok-kw">sizeof</span>(<span class="tok-type">int</span>));
+
+<span class="tok-comm">// 1. Toujours tester le retour de malloc contre NULL</span>
+<span class="tok-kw">if</span> (ptr == <span class="tok-num">NULL</span>) {
+    <span class="tok-comm">// Gérer l'épuisement de mémoire sans faire planter le système</span>
+    <span class="tok-fn">perror</span>(<span class="tok-str">"Erreur allocation mémoire"</span>);
+    <span class="tok-kw">return</span> -<span class="tok-num">1</span>;
+}
+
+<span class="tok-comm">// ... Utilisation sécurisée de ptr dans les limites allouées ...</span>
+
+<span class="tok-comm">// 2. Libération systématique</span>
+<span class="tok-fn">free</span>(ptr);
+
+<span class="tok-comm">// 3. Neutralisation immédiate du pointeur (immunité Use-After-Free)</span>
+ptr = <span class="tok-num">NULL</span>;</code></pre>
+      </div>
+
+      <div class="callout callout-warning">
+        <div class="callout-title">⚠️ Le réflexe "free puis NULL"</div>
+        Après un <code>free(ptr);</code>, la variable <code>ptr</code> conserve son adresse d'origine mais celle-ci n'appartient plus au programme. Mettre immédiatement <code>ptr = NULL;</code> garantit qu'un déréférencement ultérieur déclenchera un arrêt net plutôt qu'une corruption silencieuse ou une exploitation de sécurité.
+      </div>
+
+      <!-- 3. Contrats & Assertions -->
+      <h3 class="card-title-md">3. Contrats de Fonctions, Retours et Assertions</h3>
+      <p>
+        Chaque fonction définit un contrat : quelles sont ses préconditions (paramètres valides), ses postconditions (état garanti) et comment elle signale un échec.
+      </p>
+
+      <div class="code-container">
+        <div class="code-header">
+          <div class="code-header-dots"><span></span><span></span><span></span></div>
+          <span>contrat_assertions.c</span>
+        </div>
+        <pre><code class="language-c"><span class="tok-comm">#include &lt;assert.h&gt;</span>
+<span class="tok-comm">#include &lt;stdlib.h&gt;</span>
+
+<span class="tok-type">int</span> <span class="tok-fn">traiter_donnees</span>(<span class="tok-type">const int</span> *buffer, <span class="tok-type">size_t</span> taille) {
+    <span class="tok-comm">// Assertions : réservées aux invariants du développeur en phase de test</span>
+    <span class="tok-fn">assert</span>(buffer != <span class="tok-num">NULL</span> &amp;&amp; <span class="tok-str">"Précondition violée : buffer ne doit pas être NULL"</span>);
+
+    <span class="tok-comm">// Gestion défensive en production : retourne un code d'erreur propre</span>
+    <span class="tok-kw">if</span> (buffer == <span class="tok-num">NULL</span> || taille == <span class="tok-num">0</span>) {
+        <span class="tok-kw">return</span> -<span class="tok-num">1</span>;
+    }
+
+    <span class="tok-comm">// ... Traitement effectif ...</span>
+    <span class="tok-kw">return</span> <span class="tok-num">0</span>;
+}</code></pre>
+      </div>
+    </section>
+
+    <!-- Section 4 : Outillage -->
+    <section class="card">
+      <h2 class="card-title-lg">🧰 L'Arsenal d'Outils pour l'Auditeur & Développeur</h2>
+      <p>
+        La programmation défensive s'accompagne d'une batterie d'outils automatiques pour déceler les erreurs invisibles à l'œil nu :
+      </p>
+
+      <div class="tools-grid">
+        <div class="tool-card">
+          <strong>🧪 Tests Unitaires</strong>
+          Tester les cas nominaux mais surtout les cas extrêmes : pointeurs NULL, tableaux vides, entiers négatifs et dépassements de capacité.
+        </div>
+
+        <div class="tool-card">
+          <strong>🔍 Analyse Statique</strong>
+          Outils comme <code>cppcheck</code>, <code>clang-tidy</code> ou les drapeaux de compilation stricts (<code>-Wall -Wextra -Werror -pedantic</code>).
+        </div>
+
+        <div class="tool-card">
+          <strong>⚡ Analyse Dynamique</strong>
+          Exécuter vos binaires sous <code>Valgrind (Memcheck)</code> ou avec les assainisseurs LLVM/GCC : <code>-fsanitize=address,undefined</code>.
+        </div>
+
+        <div class="tool-card">
+          <strong>👥 Revue de Code Croisée</strong>
+          Faire auditer son code par un pair avant merge permet de lever les ambiguïtés et de repérer les hypothèses implicites non vérifiées.
+        </div>
+      </div>
+    </section>
+
+  </div>
+
+  <!-- Standard Site Footer -->
+  <footer class="site-footer">
+    <div class="container">
+      <p><strong>C Sécurisé II</strong> — CUPGE2 Cyber • ENSSAT Lannion</p>
+      <p style="margin-top: 6px; font-size: 0.82rem; color: #94a3b8;">
+        Fiche de révision notionale • Le pouvoir, les pièges des pointeurs et la programmation défensive en C.
+      </p>
+    </div>
+  </footer>
+
+</body>
+</html>

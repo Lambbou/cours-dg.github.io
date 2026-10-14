@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>La Pile (Stack) vs Le Tas (Heap) en C — Fiche de Révision C Sécurisé II</title>
+  <meta name="description" content="Infographie comparative détaillée entre la Pile (Stack) et le Tas (Heap) en langage C : vitesse, allocation, durée de vie, structure et vulnérabilités.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="resumes.css">
+  <style>
+    .memory-layout-diagram {
+      background: #f8fafc;
+      border: 1px dashed var(--border-strong);
+      border-radius: var(--radius);
+      padding: 24px;
+      margin: 24px 0;
+    }
+    .layout-stack-bars {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      max-width: 580px;
+      margin: 0 auto;
+      font-family: 'JetBrains Mono', monospace;
+    }
+    .layout-bar {
+      padding: 12px 16px;
+      border-radius: 6px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.88rem;
+      font-weight: 600;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+    }
+    .bar-stack { background: #dbeafe; color: #1e40af; border: 1px solid #93c5fd; }
+    .bar-arrow-down { text-align: center; color: #3b82f6; font-size: 0.82rem; padding: 2px 0; }
+    .bar-free { background: #f1f5f9; color: #64748b; border: 1px dashed #cbd5e1; justify-content: center; }
+    .bar-arrow-up { text-align: center; color: #ea580c; font-size: 0.82rem; padding: 2px 0; }
+    .bar-heap { background: #ffedd5; color: #c2410c; border: 1px solid #fdba74; }
+    .bar-bss { background: #e2e8f0; color: #334155; border: 1px solid #cbd5e1; }
+    .bar-text { background: #cbd5e1; color: #0f172a; border: 1px solid #94a3b8; }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <!-- Top Navigation Bar -->
+    <header class="top-nav">
+      <a href="../index.html" class="nav-back">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="19" y1="12" x2="5" y2="12"></line>
+          <polyline points="12 19 5 12 12 5"></polyline>
+        </svg>
+        Retour au Module C Sécurisé II
+      </a>
+      <span class="badge-enssat">ENSSAT <span>CUPGE2 CYBER</span></span>
+    </header>
+
+    <!-- Fiches Quick Switcher -->
+    <div class="fiches-nav-wrapper">
+      <nav class="fiches-nav" aria-label="Navigation entre fiches">
+        <a href="prog_defensive.html" class="fiche-nav-item">🛡️ Prog. Défensive</a>
+        <a href="arithmétique_pointeurs.html" class="fiche-nav-item">📐 Arithmétique Ptrs</a>
+        <a href="pile_vs_stack.html" class="fiche-nav-item active">📚 Pile vs Tas</a>
+        <a href="gestion_memoire.html" class="fiche-nav-item">📦 Gestion Mémoire</a>
+        <a href="memoire.html" class="fiche-nav-item">💾 Organisation Mémoire</a>
+        <a href="fonctions.html" class="fiche-nav-item">⚙️ Fonctions Clés</a>
+      </nav>
+    </div>
+
+    <!-- Hero Header -->
+    <div class="hero">
+      <div class="hero-meta">
+        <span class="meta-tag">C Sécurisé II</span>
+        <span class="meta-tag accent">Fiche #3</span>
+        <span class="meta-tag">Architecture Mémoire</span>
+      </div>
+      <h1 class="hero-title">📚 Mémoire en C : La Pile (Stack) vs Le Tas (Heap)</h1>
+      <p class="hero-desc">
+        Comprendre la dualité fondamentale entre l'espace d'exécution automatique (la Pile) et la réserve dynamique manuelle (le Tas) est le socle indispensable pour écrire du code C robuste et sécurisé.
+      </p>
+    </div>
+
+    <!-- Section 1 : Infographie Comparative 2 Colonnes -->
+    <section class="card">
+      <h2 class="card-title-lg">⚖️ Vue Comparative des Deux Espaces</h2>
+      <p>
+        Chaque programme C en cours d'exécution orchestre ses données entre ces deux régions aux caractéristiques antithétiques :
+      </p>
+
+      <div class="comparison-grid">
+        <!-- Colonne Pile (Stack) -->
+        <div class="compare-card stack">
+          <h3 class="compare-card-title">🗼 La Pile (Stack)</h3>
+          <ul class="feature-list">
+            <li class="feature-item">
+              <strong>Gestion 100% Automatique</strong>
+              <p>Le compilateur génère les instructions de prologue et d'épilogue pour allouer et libérer les frames à l'entrée et à la sortie de chaque fonction.</p>
+            </li>
+            <li class="feature-item">
+              <strong>Structure LIFO (Last-In, First-Out)</strong>
+              <p>Fonctionne comme une pile d'assiettes : la dernière fonction appelée (au sommet) est obligatoirement la première à être dépilée.</p>
+            </li>
+            <li class="feature-item">
+              <strong>Vitesse d'Exécution Foudroyante</strong>
+              <p>L'allocation se résume à une simple décrémentation du registre pointeur de pile (SP - Stack Pointer).</p>
+            </li>
+            <li class="feature-item">
+              <strong>Durée de Vie Éphémère</strong>
+              <p>Les variables locales cessent d'exister dès la rencontre de l'instruction <code>return</code> ou de l'accolade fermante du bloc.</p>
+            </li>
+            <li class="feature-item">
+              <strong>Taille Fixe &amp; Restreinte</strong>
+              <p>Taille modeste prédéfinie par l'OS (typiquement 8 Mo sous Linux). Risque majeur : le <em>Stack Overflow</em> lors de récursions infinies.</p>
+            </li>
+          </ul>
+        </div>
+
+        <!-- Colonne Tas (Heap) -->
+        <div class="compare-card heap">
+          <h3 class="compare-card-title">🏞️ Le Tas (Heap)</h3>
+          <ul class="feature-list">
+            <li class="feature-item">
+              <strong>Gestion Manuelle par le Développeur</strong>
+              <p>L'allocation (<code>malloc</code>, <code>calloc</code>) et la restitution (<code>free</code>) sont sous la responsabilité absolue du programmeur.</p>
+            </li>
+            <li class="feature-item">
+              <strong>Allocation Arbitraire &amp; Non Structurée</strong>
+              <p>Les blocs peuvent être réservés et libérés dans n'importe quel ordre, favorisant la fragmentation mémoire.</p>
+            </li>
+            <li class="feature-item">
+              <strong>Vitesse Modérée</strong>
+              <p>L'allocateur de la libc (ptmalloc) doit parcourir des listes de blocs libres, trouver une case adaptée et scinder le bloc.</p>
+            </li>
+            <li class="feature-item">
+              <strong>Persistance Globale</strong>
+              <p>Les données survivent indéfiniment jusqu'à un appel explicite à <code>free()</code> ou la fermeture totale du processus.</p>
+            </li>
+            <li class="feature-item">
+              <strong>Taille Vaste &amp; Dynamique</strong>
+              <p>Limitée uniquement par la mémoire virtuelle du système d'exploitation et la capacité physique (RAM + Swap).</p>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- Section 2 : Organisation Mémoire du Processus -->
+    <section class="card">
+      <h2 class="card-title-lg">🗺️ Organisation Globale de l'Espace d'Adressage Virtuel</h2>
+      <p>
+        Dans l'espace d'adressage virtuel d'un processus Linux standard (x86_64), la Pile et le Tas progressent en sens opposé afin d'optimiser l'espace mémoire libre :
+      </p>
+
+      <div class="memory-layout-diagram">
+        <div class="layout-stack-bars">
+          <div class="layout-bar bar-stack">
+            <span>[Hautes Adresses] 0x7fff...</span>
+            <span>PILE (STACK) — Variables locales &amp; Cadres d'appel</span>
+          </div>
+          <div class="bar-arrow-down">⬇ Croissance de la Stack vers le bas (adresses décroissantes)</div>
+          <div class="layout-bar bar-free">
+            <span>Espace Virtuel Libre (Non Mappé)</span>
+          </div>
+          <div class="bar-arrow-up">⬆ Croissance du Tas (Heap) vers le haut (via brk / mmap)</div>
+          <div class="layout-bar bar-heap">
+            <span>TAS (HEAP) — Données allouées dynamiquement (malloc)</span>
+            <span>[Adresses intermédiaires]</span>
+          </div>
+          <div class="layout-bar bar-bss">
+            <span>Segment BSS &amp; DATA — Variables globales et statiques</span>
+          </div>
+          <div class="layout-bar bar-text">
+            <span>[Basses Adresses] Segment TEXT — Code binaire exécutable</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="callout callout-warning">
+        <div class="callout-title">⚠️ Risques de Sécurité Différenciés</div>
+        <ul>
+          <li><strong>Sur la Stack :</strong> Buffer Overflow exploitant l'adresse de retour (écrasement de <em>Saved RIP</em>) conduisant au détournement du flux de contrôle.</li>
+          <li><strong>Sur le Heap :</strong> Fuites mémoire (Memory Leaks), déréférencement Use-After-Free (UAF), Double Free entraînant la corruption des métadonnées de l'allocateur.</li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- Section 3 : Tableau Synthétique -->
+    <section class="card">
+      <h2 class="card-title-lg">📋 Tableau Comparatif Détaillé</h2>
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>Critère</th>
+              <th>Pile (Stack)</th>
+              <th>Tas (Heap)</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>Type d'allocation</strong></td>
+              <td>Automatique (compilateur)</td>
+              <td>Manuelle (<code>malloc / free</code>)</td>
+            </tr>
+            <tr>
+              <td><strong>Ordre de libération</strong></td>
+              <td>Strictement ordonné (LIFO)</td>
+              <td>Quelconque (selon les besoins)</td>
+            </tr>
+            <tr>
+              <td><strong>Coût de performance</strong></td>
+              <td>Quasi nul (instruction CPU <code>sub rsp, ...</code>)</td>
+              <td>Appel de bibliothèque + recherche de bloc</td>
+            </tr>
+            <tr>
+              <td><strong>Durée de vie</strong></td>
+              <td>Locale à la fonction</td>
+              <td>Jusqu'au <code>free()</code> ou fin du binaire</td>
+            </tr>
+            <tr>
+              <td><strong>Fragmentation</strong></td>
+              <td>Nulle (pile compacte continue)</td>
+              <td>Possible (fragmentation interne &amp; externe)</td>
+            </tr>
+            <tr>
+              <td><strong>Erreurs typiques</strong></td>
+              <td>Stack Overflow, pointeur sur variable locale expirée</td>
+              <td>Memory Leak, Dangling Pointer, Double Free</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="callout callout-success">
+        <div class="callout-title">🎯 Règle de décision rapide en TP &amp; Projet</div>
+        Privilégiez <strong>toujours la Pile</strong> par défaut pour sa sécurité et sa rapidité. Ne recourez au <strong>Tas</strong> que si la taille de la structure est inconnue à la compilation (dépendante d'un fichier ou d'un flux réseau), très volumineuse (tableaux de plusieurs mégaoctets), ou doit impérativement persister après le retour de la fonction créatrice.
+      </div>
+    </section>
+
+  </div>
+
+  <!-- Standard Site Footer -->
+  <footer class="site-footer">
+    <div class="container">
+      <p><strong>C Sécurisé II</strong> — CUPGE2 Cyber • ENSSAT Lannion</p>
+      <p style="margin-top: 6px; font-size: 0.82rem; color: #94a3b8;">
+        Fiche de révision notionale • Le pouvoir, les pièges des pointeurs et la programmation défensive en C.
+      </p>
+    </div>
+  </footer>
+
+</body>
+</html>

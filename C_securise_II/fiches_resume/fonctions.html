@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Fonctions Clés & Pointeurs de Fonctions en C — Fiche de Révision C Sécurisé II</title>
+  <meta name="description"
+    content="Étude exhaustive des 4 fonctions clés de la mémoire dynamique (malloc, calloc, realloc, free) et des pointeurs de fonctions en langage C sécurisé.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap"
+    rel="stylesheet">
+  <link rel="stylesheet" href="resumes.css">
+  <style>
+    .funcs-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 18px;
+      margin: 20px 0;
+    }
+
+    .func-card {
+      background: #f8fafc;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 20px;
+      transition: var(--transition);
+      display: flex;
+      flex-direction: column;
+    }
+
+    .func-card:hover {
+      transform: translateY(-2px);
+      box-shadow: var(--shadow);
+    }
+
+    .func-card.malloc {
+      border-top: 4px solid #0284c7;
+    }
+
+    .func-card.calloc {
+      border-top: 4px solid #16a34a;
+    }
+
+    .func-card.realloc {
+      border-top: 4px solid #d97706;
+    }
+
+    .func-card.free {
+      border-top: 4px solid #dc2626;
+    }
+
+    .func-sig {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.84rem;
+      background: white;
+      border: 1px solid var(--border);
+      padding: 6px 10px;
+      border-radius: 6px;
+      margin: 10px 0;
+      color: var(--primary);
+    }
+
+    .func-card h4 {
+      font-size: 1.15rem;
+      color: var(--primary);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .func-card ul {
+      font-size: 0.9rem;
+      margin-bottom: 0;
+      padding-left: 18px;
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="container">
+    <!-- Top Navigation Bar -->
+    <header class="top-nav">
+      <a href="../index.html" class="nav-back">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+          stroke-linecap="round" stroke-linejoin="round">
+          <line x1="19" y1="12" x2="5" y2="12"></line>
+          <polyline points="12 19 5 12 12 5"></polyline>
+        </svg>
+        Retour au Module C Sécurisé II
+      </a>
+      <span class="badge-enssat">ENSSAT <span>CUPGE2 CYBER</span></span>
+    </header>
+
+    <!-- Fiches Quick Switcher -->
+    <div class="fiches-nav-wrapper">
+      <nav class="fiches-nav" aria-label="Navigation entre fiches">
+        <a href="prog_defensive.html" class="fiche-nav-item">🛡️ Prog. Défensive</a>
+        <a href="arithmétique_pointeurs.html" class="fiche-nav-item">📐 Arithmétique Ptrs</a>
+        <a href="pile_vs_stack.html" class="fiche-nav-item">📚 Pile vs Tas</a>
+        <a href="gestion_memoire.html" class="fiche-nav-item">📦 Gestion Mémoire</a>
+        <a href="memoire.html" class="fiche-nav-item">💾 Organisation Mémoire</a>
+        <a href="fonctions.html" class="fiche-nav-item active">⚙️ Fonctions Clés</a>
+      </nav>
+    </div>
+
+    <!-- Hero Header -->
+    <div class="hero">
+      <div class="hero-meta">
+        <span class="meta-tag">C Sécurisé II</span>
+        <span class="meta-tag accent">Fiche #6</span>
+        <span class="meta-tag">Fonctions Mémoire &amp; Callbacks</span>
+      </div>
+      <h1 class="hero-title">⚙️ Fonctions Clés &amp; Pointeurs de Fonctions</h1>
+      <p class="hero-desc">
+        Maîtrise des quatre piliers de l'API standard <code>&lt;stdlib.h&gt;</code> pour l'allocation dynamique, piège
+        critique du redimensionnement avec <code>realloc</code>, et sécurisation des pointeurs de fonctions (callbacks).
+      </p>
+    </div>
+
+    <!-- Section 1 : Les 4 Fonctions Clés -->
+    <section class="card">
+      <h2 class="card-title-lg">🏛️ Les Quatre Piliers de l'Allocation Dynamique (<code>&lt;stdlib.h&gt;</code>)</h2>
+      <p>
+        La gestion du Tas (Heap) repose sur quatre fonctions canoniques aux sémantiques et garanties bien distinctes :
+      </p>
+
+      <div class="funcs-grid">
+        <!-- malloc -->
+        <div class="func-card malloc">
+          <h4><span>1️⃣</span> malloc</h4>
+          <div class="func-sig">void* malloc(size_t size);</div>
+          <ul>
+            <li><strong>Rôle :</strong> Réserve un bloc de <code>size</code> octets consécutifs.</li>
+            <li><strong>Initialisation :</strong> Aucune ! La zone contient des <em>garbage values</em> (données
+              résiduelles). C'est à vous qu'il revient d'initialiser le contenu.</li>
+            <li><strong>Retour :</strong> Pointeur générique <code>void*</code> ou <code>NULL</code> si épuisement
+              mémoire.</li>
+          </ul>
+        </div>
+
+        <!-- calloc -->
+        <div class="func-card calloc">
+          <h4><span>2️⃣</span> calloc</h4>
+          <div class="func-sig">void* calloc(size_t nmemb, size_t size);</div>
+          <ul>
+            <li><strong>Rôle :</strong> Alloue un tableau de <code>nmemb</code> éléments de <code>size</code> octets
+              chacun.</li>
+            <li><strong>Initialisation :</strong> <strong>Tous les octets sont mis à 0</strong> (zérotage matériel
+              garanti).</li>
+            <li><strong>Sécurité :</strong> Détecte en interne le dépassement de capacité entier (<em>integer
+                overflow</em>).</li>
+          </ul>
+        </div>
+
+        <!-- realloc -->
+        <div class="func-card realloc">
+          <h4><span>3️⃣</span> realloc</h4>
+          <div class="func-sig">void* realloc(void* ptr, size_t new_size);</div>
+          <ul>
+            <li><strong>Rôle :</strong> Agrandit ou rétrécit le bloc alloué précédemment.</li>
+            <li><strong>Comportement :</strong> Étend sur place si possible, sinon alloue un nouveau bloc, copie le
+              contenu et libère l'ancien.</li>
+            <li><strong>Retour :</strong> Nouvelle adresse (peut différer de <code>ptr</code>) ou <code>NULL</code> en
+              cas d'échec.</li>
+          </ul>
+        </div>
+
+        <!-- free -->
+        <div class="func-card free">
+          <h4><span>4️⃣</span> free</h4>
+          <div class="func-sig">void free(void* ptr);</div>
+          <ul>
+            <li><strong>Rôle :</strong> Rends le bloc du Tas au système d'exploitation.</li>
+            <li><strong>Contrat :</strong> <code>ptr</code> doit provenir d'un malloc/calloc/realloc valide.</li>
+            <li><strong>Réflexe :</strong> Toujours faire suivre par <code>ptr = NULL;</code> pour éviter le pointeur
+              suspendu.</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- Section 2 : Le Piège Mortel de realloc -->
+    <section class="card">
+      <h2 class="card-title-lg">⚠️ Le Piège Critique : Comment Utiliser <code>realloc</code> en Toute Sécurité</h2>
+      <p>
+        L'erreur classique des développeurs juniors consiste à réassigner directement le retour de <code>realloc</code>
+        dans le pointeur d'origine :
+      </p>
+
+      <div class="callout callout-danger">
+        <div class="callout-title">❌ Le Motif Dangereux à Proscrire Absolument</div>
+        <pre><code class="language-c"><span class="tok-comm">// ERREUR GRAVE : Fuite de mémoire immédiate si realloc échoue !</span>
+buffer = (<span class="tok-type">char</span> *) <span class="tok-fn">realloc</span>(buffer, nouvelle_taille);
+<span class="tok-kw">if</span> (buffer == <span class="tok-num">NULL</span>) {
+    <span class="tok-comm">// buffer vaut désormais NULL, et l'ancien bloc n'a PAS été libéré !</span>
+    <span class="tok-comm">// L'adresse originelle est perdue à tout jamais : fuite irréversible (CWE-401).</span>
+}</code></pre>
+      </div>
+
+      <p>Voici la méthode rigoureuse et défensive avec variable temporaire intermédiaire :</p>
+
+      <div class="code-container">
+        <div class="code-header">
+          <div class="code-header-dots"><span></span><span></span><span></span></div>
+          <span>realloc_securise.c</span>
+        </div>
+        <pre><code class="language-c"><span class="tok-type">size_t</span> nouvelle_taille = <span class="tok-num">1024</span> * <span class="tok-kw">sizeof</span>(<span class="tok-type">int</span>);
+
+<span class="tok-comm">// 1. Utiliser impérativement un pointeur temporaire</span>
+<span class="tok-type">int</span> *tmp = (<span class="tok-type">int</span> *) <span class="tok-fn">realloc</span>(scores, nouvelle_taille);
+
+<span class="tok-kw">if</span> (tmp == <span class="tok-num">NULL</span>) {
+    <span class="tok-comm">// L'ancien bloc pointé par 'scores' est TOUJOURS intact et accessible</span>
+    <span class="tok-fn">perror</span>(<span class="tok-str">"Échec du redimensionnement"</span>);
+    <span class="tok-fn">free</span>(scores);   <span class="tok-comm">// Libération propre sans fuite si abandon</span>
+    scores = <span class="tok-num">NULL</span>;
+    <span class="tok-kw">return</span> -<span class="tok-num">1</span>;
+}
+
+<span class="tok-comm">// 2. Réassigner seulement après confirmation du succès</span>
+scores = tmp;</code></pre>
+      </div>
+    </section>
+
+    <!-- Section 3 : Les Pointeurs de Fonctions -->
+    <section class="card">
+      <h2 class="card-title-lg">🎯 Les Pointeurs de Fonctions &amp; Callbacks Sécurisés</h2>
+      <p>
+        En C, le nom d'une fonction évalue vers son adresse mémoire dans le segment de code (<code>TEXT</code>). Les
+        pointeurs de fonctions permettent de concevoir des callbacks, des tables de sauts et des architectures
+        polymorphes (comme <code>qsort</code> ou <code>bsearch</code>).
+      </p>
+
+      <h3 class="card-title-md">Syntaxe et Déclaration</h3>
+      <div class="code-container">
+        <div class="code-header">
+          <div class="code-header-dots"><span></span><span></span><span></span></div>
+          <span>pointeurs_de_fonctions.c</span>
+        </div>
+        <pre><code class="language-c"><span class="tok-comm">// Signature : fonction prenant (int, int) et renvoyant int</span>
+<span class="tok-type">int</span> <span class="tok-fn">addition</span>(<span class="tok-type">int</span> a, <span class="tok-type">int</span> b) { <span class="tok-kw">return</span> a + b; }
+<span class="tok-type">int</span> <span class="tok-fn">multiplication</span>(<span class="tok-type">int</span> a, <span class="tok-type">int</span> b) { <span class="tok-kw">return</span> a * b; }
+
+<span class="tok-comm">// Déclaration d'un pointeur de fonction 'operation'</span>
+<span class="tok-type">int</span> (*operation)(<span class="tok-type">int</span>, <span class="tok-type">int</span>) = <span class="tok-num">NULL</span>;
+
+<span class="tok-comm">// Affectation</span>
+operation = &amp;addition; <span class="tok-comm">// ou simplement: operation = addition;</span>
+
+<span class="tok-comm">// Appel sécurisé : TOUJOURS vérifier que le pointeur n'est pas NULL !</span>
+<span class="tok-kw">if</span> (operation != <span class="tok-num">NULL</span>) {
+    <span class="tok-type">int</span> res = operation(<span class="tok-num">10</span>, <span class="tok-num">5</span>); <span class="tok-comm">// ou (*operation)(10, 5) -> 15</span>
+}</code></pre>
+      </div>
+
+      <div class="callout callout-warning">
+        <div class="callout-title">🛡️ Enjeu de Sécurité Majeur (CWE-822 / Détournement de Flux)</div>
+        Un pointeur de fonction non initialisé ou corrompu par un dépassement de tampon (Buffer Overflow) permet à un
+        attaquant d'exécuter du code arbitraire s'il parvient à écraser l'adresse pointée (ex: technique <em>ROP /
+          ret2libc</em>). En programmation défensive :
+        <ul style="margin-top: 8px;">
+          <li>Toujours initialiser les pointeurs de fonctions à <code>NULL</code>.</li>
+          <li>Toujours vérifier <code>if (callback != NULL)</code> avant l'invocation.</li>
+          <li>Si possible, déclarer les tables de dispatch avec le mot-clé <code>const</code> pour qu'elles résident en
+            mémoire en lecture seule (segment <code>.rodata</code>).</li>
+        </ul>
+      </div>
+
+      <h3 class="card-title-md">Exemple Réel : Callback avec <code>typedef</code></h3>
+      <div class="code-container">
+        <div class="code-header">
+          <div class="code-header-dots"><span></span><span></span><span></span></div>
+          <span>callback_typedef.c</span>
+        </div>
+        <pre><code class="language-c"><span class="tok-comm">// Clarté et robustesse grâce à typedef</span>
+<span class="tok-kw">typedef</span> <span class="tok-type">int</span> (*<span class="tok-type">comparateur_t</span>)(<span class="tok-type">const void</span> *, <span class="tok-type">const void</span> *);
+
+<span class="tok-type">void</span> <span class="tok-fn">trier_tableau</span>(<span class="tok-type">void</span> *base, <span class="tok-type">size_t</span> n, <span class="tok-type">size_t</span> size, <span class="tok-type">comparateur_t</span> cmp) {
+    <span class="tok-kw">if</span> (base == <span class="tok-num">NULL</span> || cmp == <span class="tok-num">NULL</span> || n == <span class="tok-num">0</span>) {
+        <span class="tok-kw">return</span>; <span class="tok-comm">// Échec gracieux défensif</span>
+    }
+    <span class="tok-fn">qsort</span>(base, n, size, cmp);
+}</code></pre>
+      </div>
+    </section>
+
+  </div>
+
+  <!-- Standard Site Footer -->
+  <footer class="site-footer">
+    <div class="container">
+      <p><strong>C Sécurisé II</strong> — CUPGE2 Cyber • ENSSAT Lannion</p>
+      <p style="margin-top: 6px; font-size: 0.82rem; color: #94a3b8;">
+        Fiche de révision notionale • Le pouvoir, les pièges des pointeurs et la programmation défensive en C.
+      </p>
+    </div>
+  </footer>
+
+</body>
+
+</html>

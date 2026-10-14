@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Arithmétique des Pointeurs en C — Fiche de Révision C Sécurisé II</title>
+  <meta name="description" content="Comprendre le fonctionnement et les pièges de l'arithmétique des pointeurs en C : décalage basé sur sizeof(type), sucre syntaxique des tableaux et opérations valides.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="resumes.css">
+  <style>
+    .math-formula-box {
+      background: #f1f5f9;
+      border: 1px solid var(--border-strong);
+      border-radius: var(--radius-sm);
+      padding: 16px 20px;
+      margin: 18px 0;
+      text-align: center;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 1.05rem;
+      color: var(--primary);
+    }
+    .math-formula-box b {
+      color: var(--accent);
+    }
+    .ops-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 16px;
+      margin: 20px 0;
+    }
+    .op-card {
+      background: #f8fafc;
+      border: 1px solid var(--border);
+      border-left: 4px solid var(--primary-light);
+      border-radius: var(--radius-sm);
+      padding: 16px;
+    }
+    .op-card h4 {
+      color: var(--primary);
+      margin-bottom: 8px;
+      font-size: 1rem;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <!-- Top Navigation Bar -->
+    <header class="top-nav">
+      <a href="../index.html" class="nav-back">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="19" y1="12" x2="5" y2="12"></line>
+          <polyline points="12 19 5 12 12 5"></polyline>
+        </svg>
+        Retour au Module C Sécurisé II
+      </a>
+      <span class="badge-enssat">ENSSAT <span>CUPGE2 CYBER</span></span>
+    </header>
+
+    <!-- Fiches Quick Switcher -->
+    <div class="fiches-nav-wrapper">
+      <nav class="fiches-nav" aria-label="Navigation entre fiches">
+        <a href="prog_defensive.html" class="fiche-nav-item">🛡️ Prog. Défensive</a>
+        <a href="arithmétique_pointeurs.html" class="fiche-nav-item active">📐 Arithmétique Ptrs</a>
+        <a href="pile_vs_stack.html" class="fiche-nav-item">📚 Pile vs Tas</a>
+        <a href="gestion_memoire.html" class="fiche-nav-item">📦 Gestion Mémoire</a>
+        <a href="memoire.html" class="fiche-nav-item">💾 Organisation Mémoire</a>
+        <a href="fonctions.html" class="fiche-nav-item">⚙️ Fonctions Clés</a>
+      </nav>
+    </div>
+
+    <!-- Hero Header -->
+    <div class="hero">
+      <div class="hero-meta">
+        <span class="meta-tag">C Sécurisé II</span>
+        <span class="meta-tag accent">Fiche #2</span>
+        <span class="meta-tag">Arithmétique & Indexation</span>
+      </div>
+      <h1 class="hero-title">📐 L'Arithmétique des Pointeurs en C</h1>
+      <p class="hero-desc">
+        L'arithmétique des pointeurs permet de naviguer dans les zones contiguës de mémoire. Contrairement à l'arithmétique entière classique, tout déplacement est automatiquement modulé par la taille du type pointé (<code>sizeof(T)</code>).
+      </p>
+    </div>
+
+    <!-- Section 1 : Le Principe Fondamental -->
+    <section class="card">
+      <h2 class="card-title-lg">🎯 Le Principe Fondamental : Une Arithmétique Basée sur le Type</h2>
+      <p>
+        Lorsque vous additionnez <code>1</code> à un pointeur, le compilateur C n'ajoute pas un unique octet à l'adresse mémoire physique. Il fait pointer la variable sur l'<strong>élément suivant</strong> du même type.
+      </p>
+
+      <div class="math-formula-box">
+        Adresse résultante = <code>ptr + (i × sizeof(*ptr))</code>
+      </div>
+
+      <p>Le compilateur déduit automatiquement le facteur d'échelle à partir du type de base :</p>
+      <ul>
+        <li><code>ptr + 1</code> pour un <code>int*</code> avance de <code>1 × sizeof(int)</code> = <strong>4 octets</strong> (sur architecture 32/64 bits usuelle).</li>
+        <li><code>ptr + 1</code> pour un <code>char*</code> avance de <code>1 × sizeof(char)</code> = <strong>1 octet</strong> (toujours 1 par définition ISO C).</li>
+        <li><code>ptr + 1</code> pour un <code>double*</code> avance de <code>1 × sizeof(double)</code> = <strong>8 octets</strong>.</li>
+        <li><code>ptr + 1</code> pour une <code>struct MaStructure*</code> avance de <code>sizeof(struct MaStructure)</code> octets.</li>
+      </ul>
+
+      <div class="code-container">
+        <div class="code-header">
+          <div class="code-header-dots"><span></span><span></span><span></span></div>
+          <span>arithmetique_base.c</span>
+        </div>
+        <pre><code class="language-c"><span class="tok-type">int</span> numbers[] = {<span class="tok-num">10</span>, <span class="tok-num">20</span>, <span class="tok-num">30</span>, <span class="tok-num">40</span>};
+<span class="tok-type">int</span> *ptr = numbers; <span class="tok-comm">// ptr pointe sur le 1er élément (&amp;numbers[0] -> 10)</span>
+
+<span class="tok-comm">// Déplacement de 2 cases int (donc de 2 * 4 = 8 octets en mémoire)</span>
+ptr = ptr + <span class="tok-num">2</span>;     <span class="tok-comm">// ptr pointe désormais sur le 3ème élément (numbers[2] -> 30)</span>
+<span class="tok-fn">printf</span>(<span class="tok-str">"Valeur : %d\n"</span>, *ptr); <span class="tok-comm">// Affiche 30</span></code></pre>
+      </div>
+    </section>
+
+    <!-- Section 2 : Visualisation Graphique -->
+    <section class="card">
+      <h2 class="card-title-lg">👁️ Visualisation en Mémoire (Stack &amp; Heap)</h2>
+      <p>
+        Examinons l'effet de l'opération <code>ptr + 2</code> dans l'espace mémoire d'un programme. Supposons un tableau d'entiers de 4 octets débutant à l'adresse <code>@0x1000</code> :
+      </p>
+
+      <div class="memory-diagram">
+        <!-- Pile -->
+        <div class="memory-area">
+          <div class="memory-box stack-box">
+            <h4>📦 Pile (Stack)</h4>
+            <div class="pointer-card">
+              <div class="pointer-card-header">
+                <span class="pointer-name">ptr</span>
+                <span class="pointer-addr">@0x7ffc...</span>
+              </div>
+              <div>Contient l'adresse :</div>
+              <div class="pointer-val">@0x1008</div>
+              <small style="color: #64748b;">(après ptr + 2)</small>
+            </div>
+          </div>
+        </div>
+
+        <!-- Flèche de liaison -->
+        <div class="diagram-arrow">➔</div>
+
+        <!-- Tas / Mémoire contiguë -->
+        <div class="memory-area" style="flex: 2;">
+          <div class="memory-box heap-box">
+            <h4>💾 Mémoire Contiguë (Tableau)</h4>
+            <div class="array-vis">
+              <div class="array-cell">
+                <div class="cell-index">[0]</div>
+                <div class="cell-value">10</div>
+                <div class="cell-addr">@0x1000</div>
+              </div>
+              <div class="array-cell">
+                <div class="cell-index">[1]</div>
+                <div class="cell-value">20</div>
+                <div class="cell-addr">@0x1004</div>
+              </div>
+              <div class="array-cell highlight">
+                <div class="cell-index">[2] ★</div>
+                <div class="cell-value">30</div>
+                <div class="cell-addr">@0x1008</div>
+              </div>
+              <div class="array-cell">
+                <div class="cell-index">[3]</div>
+                <div class="cell-value">40</div>
+                <div class="cell-addr">@0x100C</div>
+              </div>
+            </div>
+            <p style="font-size: 0.85rem; color: #7c2d12; margin-top: 8px;">
+              L'élément sélectionné <code>[2]</code> est à <code>0x1000 + (2 × 4) = 0x1008</code>.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <div class="callout callout-info">
+        <div class="callout-title">📌 Décorticage du calcul</div>
+        L'expression <code>ptr + 2</code> ne produit <strong>absolument pas</strong> <code>0x1000 + 2 = 0x1002</code> (ce qui désalignerait l'accès pour un entier de 32 bits et entraînerait un crash sur certaines architectures matérielles). Elle calcule <code>0x1000 + 2 × 4 = 0x1008</code>.
+      </div>
+    </section>
+
+    <!-- Section 3 : Sucre syntaxique -->
+    <section class="card">
+      <h2 class="card-title-lg">🍬 Tableaux et Crochets : Du Sucre Syntaxique !</h2>
+      <p>
+        En C, l'opérateur d'indexation avec crochets <code>[]</code> n'est qu'une écriture condensée de l'arithmétique des pointeurs combinée au déréférencement.
+      </p>
+
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>Syntaxe avec Crochets</th>
+              <th>Arithmétique Pointeur Équivalente</th>
+              <th>Interprétation Interne par le Compilateur</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>val = array[i];</code></td>
+              <td><code>val = *(array + i);</code></td>
+              <td>Avance de <code>i</code> cases depuis <code>array</code>, puis lit le contenu.</td>
+            </tr>
+            <tr>
+              <td><code>&amp;array[i];</code></td>
+              <td><code>array + i;</code></td>
+              <td>Calcule l'adresse du <code>i</code>-ème élément.</td>
+            </tr>
+            <tr>
+              <td><code>array[0];</code></td>
+              <td><code>*array;</code></td>
+              <td>Accède au tout premier élément à l'adresse de base.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="callout callout-accent">
+        <div class="callout-title">💡 La curiosité de la commutativité en C</div>
+        Comme l'addition est commutative (<code>a + b == b + a</code>), les expressions <code>array[i]</code> et <code>i[array]</code> produisent exactement la même opération interne : <code>*(array + i)</code>. Bien qu'à proscrire pour la lisibilité, cette particularité illustre parfaitement la nature de l'indexation en C.
+      </div>
+    </section>
+
+    <!-- Section 4 : Opérations valides -->
+    <section class="card">
+      <h2 class="card-title-lg">⚙️ Les Opérations Arithmétiques Valides en C</h2>
+      <p>Le standard C autorise uniquement quatre opérations mathématiques sur les adresses :</p>
+
+      <div class="ops-grid">
+        <div class="op-card">
+          <h4><span>1️⃣</span> Pointeur + Entier</h4>
+          <p>Produit un nouveau pointeur décalé de <code>n</code> éléments vers l'avant.</p>
+          <code>p_suiv = ptr + 3;</code>
+        </div>
+
+        <div class="op-card">
+          <h4><span>2️⃣</span> Pointeur - Entier</h4>
+          <p>Produit un nouveau pointeur décalé de <code>n</code> éléments vers l'arrière.</p>
+          <code>p_prec = ptr - 2;</code>
+        </div>
+
+        <div class="op-card">
+          <h4><span>3️⃣</span> Pointeur - Pointeur</h4>
+          <p>Donne le <strong>nombre d'éléments</strong> séparant deux pointeurs du <em>même tableau</em> (type <code>ptrdiff_t</code>).</p>
+          <code>ptrdiff_t nb = p2 - p1;</code>
+        </div>
+
+        <div class="op-card">
+          <h4><span>4️⃣</span> Incrémentation &amp; Décrémentation</h4>
+          <p>Avance ou recule d'une case (<code>ptr++</code>, <code>ptr--</code>).</p>
+          <code>*ptr++ = valeur;</code>
+        </div>
+      </div>
+
+      <div class="code-container">
+        <div class="code-header">
+          <div class="code-header-dots"><span></span><span></span><span></span></div>
+          <span>operations_pointeurs.c</span>
+        </div>
+        <pre><code class="language-c"><span class="tok-type">int</span> tab[] = {<span class="tok-num">10</span>, <span class="tok-num">20</span>, <span class="tok-num">30</span>, <span class="tok-num">40</span>, <span class="tok-num">50</span>};
+<span class="tok-type">int</span> *p1 = &amp;tab[<span class="tok-num">1</span>]; <span class="tok-comm">// Pointe sur tab[1] (valeur 20)</span>
+<span class="tok-type">int</span> *p2 = &amp;tab[<span class="tok-num">4</span>]; <span class="tok-comm">// Pointe sur tab[4] (valeur 50)</span>
+
+<span class="tok-comm">// Soustraction de 2 pointeurs : retourne le nombre de cases séparatrices</span>
+<span class="tok-type">ptrdiff_t</span> ecart = p2 - p1; 
+<span class="tok-fn">printf</span>(<span class="tok-str">"Écart en éléments : %td\n"</span>, ecart); <span class="tok-comm">// Affiche 3</span>
+
+<span class="tok-comm">// Attention aux priorités d'opérateurs :</span>
+<span class="tok-type">int</span> val1 = *p1++;   <span class="tok-comm">// Lit la valeur actuelle de *p1, PUIS incrémente le pointeur p1</span>
+<span class="tok-type">int</span> val2 = (*p1)++; <span class="tok-comm">// Incrémente LA VALEUR pointée par p1</span></code></pre>
+      </div>
+
+      <div class="callout callout-danger">
+        <div class="callout-title">🚫 Opérations STRICTEMENT INTERDITES en C</div>
+        Il est formellement interdit de <strong>multiplier</strong> ou <strong>diviser</strong> un pointeur, ou encore d'<strong>additionner deux pointeurs entre eux</strong> (<code>p1 + p2</code> est une erreur de compilation). De plus, soustraire deux pointeurs appartenant à des blocs mémoires différents conduit à un comportement indéfini.
+      </div>
+    </section>
+
+    <!-- Section 5 : Sécurité & Pièges -->
+    <section class="card">
+      <h2 class="card-title-lg">⚠️ Pièges Critiques &amp; Vulnérabilités de Dépassement</h2>
+      <p>
+        L'arithmétique des pointeurs ne bénéficie d'aucun mécanisme de contrôle des bornes (<em>bounds checking</em>) automatique au runtime. Si votre code calcule une adresse en dehors du bloc alloué :
+      </p>
+      <ul>
+        <li><strong>Dépassement de tampon (Buffer Overflow) :</strong> Écrire au-delà de la taille allouée corrompt les variables adjacentes, la pile d'exécution ou les métadonnées du tas (Heap).</li>
+        <li><strong>Comportement Indéfini (UB) :</strong> Le compilateur peut optimiser agressivement votre code sous l'hypothèse qu'un pointeur ne dépasse jamais les bornes, provoquant des anomalies de comportement inexplicables.</li>
+      </ul>
+
+      <div class="callout callout-warning">
+        <div class="callout-title">🛡️ La règle de l'adresse sentinelle (One-past-the-end)</div>
+        Le standard C autorise explicitement à calculer l'adresse <code>&amp;array[taille]</code> (soit un élément juste après la fin du tableau) pour servir de sentinelle d'arrêt dans une boucle. Cependant, il est <strong>strictement interdit de déréférencer</strong> cette adresse sentinelle (<code>*(&amp;array[taille])</code> déclenche un comportement indéfini).
+      </div>
+    </section>
+
+  </div>
+
+  <!-- Standard Site Footer -->
+  <footer class="site-footer">
+    <div class="container">
+      <p><strong>C Sécurisé II</strong> — CUPGE2 Cyber • ENSSAT Lannion</p>
+      <p style="margin-top: 6px; font-size: 0.82rem; color: #94a3b8;">
+        Fiche de révision notionale • Le pouvoir, les pièges des pointeurs et la programmation défensive en C.
+      </p>
+    </div>
+  </footer>
+
+</body>
+</html>

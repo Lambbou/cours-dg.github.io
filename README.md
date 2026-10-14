@@ -25,6 +25,13 @@ Le site repose sur une organisation modulaire par matière :
 cours-dg.github.io/
 ├── index.html                  # 🏠 Page d'accueil principale du portail
 ├── README.md                   # 📖 Documentation et guide d'administration
+├── C_securise_II/              # 🔒 Dossier du cours "C Sécurisé II : Pointeurs & Programmation Défensive"
+│   ├── index.html              # Page d'atterrissage du module C Sécurisé II
+│   ├── quiz-programmation-defensive.html # Quiz 1 : Programmation Défensive (10 questions)
+│   ├── quiz-pointeurs-bases.html         # Quiz 2 : Fondements des Pointeurs (10 questions)
+│   ├── visualisation-stack.html          # Visualisation interactive de la Stack (LIFO)
+│   ├── visualisation-heap.html           # Visualisation interactive du Heap
+│   └── fiches_resume/          # 📑 6 Fiches de révision notionale (Prog. défensive, Stack/Heap, malloc/free...)
 ├── doo/                        # 📦 Dossier du cours "Développement Objet I" (DOO)
 │   ├── index.html              # Page d'atterrissage et synthèse du module DOO
 │   ├── doo-quiz-cm-1.html      # Quiz 1 : Fondements POO & Associations UML (12 questions)

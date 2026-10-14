@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gestion Dynamique de la Mémoire en C — Fiche de Révision C Sécurisé II</title>
+  <meta name="description" content="Guide pratique de gestion dynamique de la mémoire en C : allocation sur le Heap, cycle de vie, prévention des fuites de mémoire et des doubles libérations.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="resumes.css">
+  <style>
+    .lifecycle-steps {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+      gap: 14px;
+      margin: 20px 0;
+    }
+    .lifecycle-step {
+      background: #f8fafc;
+      border: 1px solid var(--border);
+      border-top: 4px solid var(--primary);
+      border-radius: var(--radius-sm);
+      padding: 16px;
+      text-align: center;
+      transition: var(--transition);
+    }
+    .lifecycle-step:hover {
+      transform: translateY(-2px);
+      box-shadow: var(--shadow);
+      border-top-color: var(--secondary);
+    }
+    .step-num {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: var(--secondary-light);
+      color: var(--secondary);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 10px auto;
+      font-weight: 700;
+      font-family: 'JetBrains Mono', monospace;
+    }
+    .lifecycle-step strong {
+      display: block;
+      color: var(--primary);
+      margin-bottom: 6px;
+      font-size: 0.95rem;
+    }
+    .lifecycle-step p {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      margin: 0;
+    }
+    .vuln-cards {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 16px;
+      margin: 20px 0;
+    }
+    .vuln-card {
+      background: white;
+      border: 1px solid #fecaca;
+      border-left: 4px solid var(--danger);
+      border-radius: var(--radius-sm);
+      padding: 16px;
+      box-shadow: 0 2px 4px rgba(220, 38, 38, 0.04);
+    }
+    .vuln-card h4 {
+      color: var(--danger);
+      margin-bottom: 6px;
+      font-size: 1rem;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <!-- Top Navigation Bar -->
+    <header class="top-nav">
+      <a href="../index.html" class="nav-back">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="19" y1="12" x2="5" y2="12"></line>
+          <polyline points="12 19 5 12 12 5"></polyline>
+        </svg>
+        Retour au Module C Sécurisé II
+      </a>
+      <span class="badge-enssat">ENSSAT <span>CUPGE2 CYBER</span></span>
+    </header>
+
+    <!-- Fiches Quick Switcher -->
+    <div class="fiches-nav-wrapper">
+      <nav class="fiches-nav" aria-label="Navigation entre fiches">
+        <a href="prog_defensive.html" class="fiche-nav-item">🛡️ Prog. Défensive</a>
+        <a href="arithmétique_pointeurs.html" class="fiche-nav-item">📐 Arithmétique Ptrs</a>
+        <a href="pile_vs_stack.html" class="fiche-nav-item">📚 Pile vs Tas</a>
+        <a href="gestion_memoire.html" class="fiche-nav-item active">📦 Gestion Mémoire</a>
+        <a href="memoire.html" class="fiche-nav-item">💾 Organisation Mémoire</a>
+        <a href="fonctions.html" class="fiche-nav-item">⚙️ Fonctions Clés</a>
+      </nav>
+    </div>
+
+    <!-- Hero Header -->
+    <div class="hero">
+      <div class="hero-meta">
+        <span class="meta-tag">C Sécurisé II</span>
+        <span class="meta-tag accent">Fiche #4</span>
+        <span class="meta-tag">Allocation Dynamique</span>
+      </div>
+      <h1 class="hero-title">📦 Gestion Dynamique de la Mémoire en C</h1>
+      <p class="hero-desc">
+        La gestion dynamique permet d'allouer de la mémoire sur le Tas (Heap) à l'exécution. Elle offre une flexibilité indispensable pour les structures de données dynamiques, mais requiert une rigueur absolue pour éviter les failles critiques.
+      </p>
+    </div>
+
+    <!-- Section 1 : Pourquoi l'allocation dynamique ? -->
+    <section class="card">
+      <h2 class="card-title-lg">🎯 Pourquoi Recourir à l'Allocation Dynamique ?</h2>
+      <p>
+        En C, les tableaux locaux déclarés sur la pile nécessitent une taille fixée ou limitée à la durée d'exécution du cadre de la fonction (<em>stack frame</em>). Dès que la fonction se termine, sa pile est invalidée.
+      </p>
+      <p>
+        L'allocation dynamique répond à trois impératifs majeurs :
+      </p>
+      <ul>
+        <li><strong>Taille inconnue à la compilation :</strong> Charger un fichier dont le volume varie, lire des paquets réseau ou accueillir une saisie dynamique.</li>
+        <li><strong>Persistance des données :</strong> Créer une structure (ex: nœud de liste chaînée) dans une fonction et pouvoir la transmettre à d'autres modules sans la détruire au <code>return</code>.</li>
+        <li><strong>Volumes de données importants :</strong> La pile (Stack) étant restreinte (quelques Mo), stocker de gros buffers en mémoire vive impose de passer par le Tas (Heap).</li>
+      </ul>
+    </section>
+
+    <!-- Section 2 : Cycle de Vie en 4 Étapes -->
+    <section class="card">
+      <h2 class="card-title-lg">🔄 Le Cycle de Vie d'un Bloc Dynamique en 4 Temps</h2>
+
+      <div class="lifecycle-steps">
+        <div class="lifecycle-step">
+          <div class="step-num">1</div>
+          <strong>Calcul de Taille</strong>
+          <p>Multiplication du nombre d'éléments par <code>sizeof(type)</code>.</p>
+        </div>
+        <div class="lifecycle-step">
+          <div class="step-num">2</div>
+          <strong>Allocation &amp; Contrôle</strong>
+          <p>Appel de <code>malloc/calloc</code> et vérification impérative contre <code>NULL</code>.</p>
+        </div>
+        <div class="lifecycle-step">
+          <div class="step-num">3</div>
+          <strong>Exploitation</strong>
+          <p>Lecture et écriture en respectant scrupuleusement les bornes.</p>
+        </div>
+        <div class="lifecycle-step">
+          <div class="step-num">4</div>
+          <strong>Libération &amp; NULL</strong>
+          <p>Appel de <code>free()</code> suivi immédiatement de <code>ptr = NULL</code>.</p>
+        </div>
+      </div>
+
+      <div class="code-container">
+        <div class="code-header">
+          <div class="code-header-dots"><span></span><span></span><span></span></div>
+          <span>cycle_de_vie_heap.c</span>
+        </div>
+        <pre><code class="language-c"><span class="tok-comm">#include &lt;stdio.h&gt;</span>
+<span class="tok-comm">#include &lt;stdlib.h&gt;</span>
+
+<span class="tok-type">int</span> <span class="tok-fn">traiter_scores</span>(<span class="tok-type">size_t</span> nb_joueurs) {
+    <span class="tok-comm">// ÉTAPE 1 &amp; 2 : Allocation et test immédiat</span>
+    <span class="tok-type">int</span> *scores = (<span class="tok-type">int</span> *) <span class="tok-fn">malloc</span>(nb_joueurs * <span class="tok-kw">sizeof</span>(<span class="tok-type">int</span>));
+    <span class="tok-kw">if</span> (scores == <span class="tok-num">NULL</span>) {
+        <span class="tok-fn">perror</span>(<span class="tok-str">"Allocation impossible (mémoire épuisée)"</span>);
+        <span class="tok-kw">return</span> -<span class="tok-num">1</span>;
+    }
+
+    <span class="tok-comm">// ÉTAPE 3 : Exploitation sécurisée</span>
+    <span class="tok-kw">for</span> (<span class="tok-type">size_t</span> i = <span class="tok-num">0</span>; i &lt; nb_joueurs; ++i) {
+        scores[i] = (<span class="tok-type">int</span>)(i * <span class="tok-num">100</span>);
+    }
+
+    <span class="tok-comm">// ÉTAPE 4 : Libération et désarmement</span>
+    <span class="tok-fn">free</span>(scores);
+    scores = <span class="tok-num">NULL</span>; <span class="tok-comm">// Bannit le pointeur suspendu</span>
+
+    <span class="tok-kw">return</span> <span class="tok-num">0</span>;
+}</code></pre>
+      </div>
+    </section>
+
+    <!-- Section 3 : Pièges & Vulnérabilités -->
+    <section class="card">
+      <h2 class="card-title-lg">⚠️ Les 4 Dangers Mortels de la Mémoire Dynamique</h2>
+      <p>
+        La liberté accordée par le C s'accompagne d'un risque élevé de vulnérabilités répertoriées au Common Weakness Enumeration (CWE) :
+      </p>
+
+      <div class="vuln-cards">
+        <div class="vuln-card">
+          <h4>🚰 Fuite de Mémoire (Memory Leak - CWE-401)</h4>
+          <p>
+            Oublier de libérer un bloc ou écraser l'unique pointeur le référençant. La mémoire consommée n'est jamais rendue à l'OS avant l'arrêt du processus.
+          </p>
+        </div>
+
+        <div class="vuln-card">
+          <h4>💥 Déréférencement NULL (CWE-476)</h4>
+          <p>
+            Utiliser directement l'adresse renvoyée par <code>malloc</code> sans tester si elle vaut <code>NULL</code> (cas d'échec d'allocation). Provoque un crash immédiat.
+          </p>
+        </div>
+
+        <div class="vuln-card">
+          <h4>👻 Pointeur Suspendu &amp; Use-After-Free (CWE-416)</h4>
+          <p>
+            Continuer à lire ou écrire à travers un pointeur après avoir exécuté <code>free(ptr);</code>. Permet à un attaquant de corrompre des données nouvellement réallouées.
+          </p>
+        </div>
+
+        <div class="vuln-card">
+          <h4>💣 Double Libération (Double Free - CWE-415)</h4>
+          <p>
+            Appeler deux fois <code>free()</code> sur le même pointeur sans réallocation intermédiaire. Corrompt les structures internes de l'allocateur (ptmalloc).
+          </p>
+        </div>
+      </div>
+
+      <div class="callout callout-danger">
+        <div class="callout-title">🛡️ L'astuce défensive : pourquoi free(NULL) est inoffensif</div>
+        Le standard C stipule que si le paramètre passé à <code>free()</code> est un pointeur <code>NULL</code>, la fonction ne fait <strong>strictement rien</strong> et ne génère aucune erreur. Dès lors, assigner <code>ptr = NULL;</code> après libération protège contre les crashs en cas de second appel accidentel à <code>free(ptr);</code> !
+      </div>
+    </section>
+
+    <!-- Section 4 : Recommandations pour le TP & Projet -->
+    <section class="card">
+      <h2 class="card-title-lg">💡 Bonnes Pratiques Architecturales</h2>
+      <ul>
+        <li><strong>Principe de responsabilité (Ownership) :</strong> Identifiez clairement quelle entité est responsable de la création et de la libération d'une ressource.</li>
+        <li><strong>Couples d'initialisation / destruction :</strong> Pour vos structures personnalisées, créez systématiquement des fonctions appariées : <code>mon_type_create(...)</code> et <code>mon_type_destroy(mon_type_t **ptr)</code>.</li>
+        <li><strong>Audit dynamique continu :</strong> En séance de TP, compilez toujours avec les drapeaux de détection mémoire : <code>gcc -Wall -Wextra -g -fsanitize=address,undefined</code>.</li>
+      </ul>
+    </section>
+
+  </div>
+
+  <!-- Standard Site Footer -->
+  <footer class="site-footer">
+    <div class="container">
+      <p><strong>C Sécurisé II</strong> — CUPGE2 Cyber • ENSSAT Lannion</p>
+      <p style="margin-top: 6px; font-size: 0.82rem; color: #94a3b8;">
+        Fiche de révision notionale • Le pouvoir, les pièges des pointeurs et la programmation défensive en C.
+      </p>
+    </div>
+  </footer>
+
+</body>
+</html>
